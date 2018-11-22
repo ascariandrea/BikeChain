@@ -14,6 +14,7 @@ interface State {
   isScanning: boolean;
   devices: Option<Device[]>;
 }
+
 export default class Scan extends React.Component<{}, State> {
   public state: State = {
     isScanning: false,
@@ -26,6 +27,7 @@ export default class Scan extends React.Component<{}, State> {
     super(props);
     this.manager = new BleManager({
       restoreStateIdentifier: 'id',
+      // tslint:disable-next-line:no-console
       restoreStateFunction: console.log
     });
   }
@@ -33,7 +35,7 @@ export default class Scan extends React.Component<{}, State> {
   public render() {
     const { isScanning, devices } = this.state;
     return (
-      <View style={{ flex: 1, width: '100%', backgroundColor: 'red' }}>
+      <View style={{ flex: 1, width: '100%' }}>
         <View style={{ flex: 1, alignSelf: 'flex-end' }}>
           {!isScanning ? (
             <Button title="Start scanning" onPress={this.scanAndConnect} />
@@ -97,6 +99,7 @@ export default class Scan extends React.Component<{}, State> {
                 null,
                 async (error, device) => {
                   if (error) {
+                    // tslint:disable-next-line:no-console
                     console.log(error);
                     // Handle error (scanning will be stopped automatically)
                     return;
@@ -108,7 +111,6 @@ export default class Scan extends React.Component<{}, State> {
                         dvs => !!dvs.find(d => d.id === device.id)
                       )
                     ) {
-                      console.log('New device', device);
                       this.setState({
                         devices: this.state.devices
                           .map(devices => devices.concat([device]))
