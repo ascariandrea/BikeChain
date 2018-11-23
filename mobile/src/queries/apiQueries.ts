@@ -1,6 +1,6 @@
 import { available, Query } from 'avenger';
+import { client } from '../API/Client';
 import { Device } from '../models/Device';
-import { client } from './Client';
 
 export const devices = Query({
   params: {},

@@ -7,7 +7,7 @@ import Axios, {
 } from 'axios';
 import { ask, Reader } from 'fp-ts/lib/Reader';
 import { ReaderTaskEither, tryCatch } from 'fp-ts/lib/ReaderTaskEither';
-import { state } from './global';
+import { state } from '../state';
 
 interface ClientConfig {
   baseURL: string;
@@ -72,7 +72,7 @@ const makeClient: Reader<ClientConfig, Client> = ask<ClientConfig>().map(
 );
 
 export const client = makeClient.run({
-  baseURL: 'http://localhost:8080',
+  baseURL: 'http://192.168.1.230:8080',
   responseMapper(res) {
     return res.data;
   },

@@ -1,25 +1,18 @@
 import * as React from 'react';
-import { StyleSheet, View } from 'react-native';
-// import ScanRoute from './routes/ScanRoute';
-import AddDevice from './components/AddDevice';
-import Toaster from './components/Toaster';
+import { createAppContainer, createStackNavigator } from 'react-navigation';
+import { AddDeviceRoute } from './routes/AddDeviceRoute';
+import { DevicesRoute } from './routes/DevicesRoute';
+import { ROUTES } from './routes/routes';
+
+const AppContainer = createAppContainer(
+  createStackNavigator({
+    [ROUTES.DEVICES]: DevicesRoute,
+    [ROUTES.ADD_DEVICE]: AddDeviceRoute
+  })
+);
 
 export default class App extends React.Component {
   public render() {
-    return (
-      <View style={styles.container}>
-        <Toaster />
-        <AddDevice />
-      </View>
-    );
+    return <AppContainer />;
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center'
-  }
-});

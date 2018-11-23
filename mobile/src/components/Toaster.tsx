@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { declareQueries } from 'react-avenger';
 import { Text, View } from 'react-native';
-import { state } from '../API/global';
+import { state } from '../state';
 
 const queries = declareQueries({ error: state.error.query });
 

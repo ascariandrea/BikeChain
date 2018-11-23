@@ -14,8 +14,7 @@ object CreateTables
     with DBConfig {
 
   import com.bikechain.core.PostgresProfile.api._
-  override implicit val ec: ExecutionContext =
-    scala.concurrent.ExecutionContext.global
+  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
 
   lazy val tables = List(
     users,

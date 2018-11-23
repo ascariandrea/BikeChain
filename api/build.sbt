@@ -9,7 +9,7 @@ name := "BikeChainAPI"
 
 version := "0.1"
 
-scalaVersion := "2.12.7"
+scalaVersion := "2.12.8"
 
 libraryDependencies ++= Seq(
   "io.buildo" %% "wiro-http-server" % "0.6.13",
@@ -31,4 +31,4 @@ libraryDependencies ++= Seq(
 fork in run := true
 cancelable in Global := true
 
-lazy val root = (project in file("."))
+lazy val root = project in file(".")

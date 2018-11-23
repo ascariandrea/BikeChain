@@ -1,5 +1,5 @@
-import { none, Option, some } from 'fp-ts/lib/Option';
 import * as React from 'react';
+import { declareCommands, declareQueries } from 'react-avenger';
 import {
   Button,
   FlatList,
@@ -8,73 +8,70 @@ import {
   Text,
   View
 } from 'react-native';
-import { BleManager, Device } from 'react-native-ble-plx';
+import { Device } from 'react-native-ble-plx';
+import { bleCommands } from '../../commands';
+import { bleQueries } from '../../queries';
+import { FlexView } from '../common/FlexView';
+
+const queries = declareQueries({ scannedDevices: bleQueries.scannedDevices });
+const commands = declareCommands(bleCommands);
+
+type Props = typeof queries.Props & typeof commands.Props;
 
 interface State {
   isScanning: boolean;
-  devices: Option<Device[]>;
 }
 
-export default class Scan extends React.Component<{}, State> {
+class Scan extends React.Component<Props, State> {
   public state: State = {
-    isScanning: false,
-    devices: none
+    isScanning: false
   };
 
-  private manager: BleManager;
-
-  constructor(props: {}) {
-    super(props);
-    this.manager = new BleManager({
-      restoreStateIdentifier: 'id',
-      // tslint:disable-next-line:no-console
-      restoreStateFunction: console.log
-    });
-  }
-
   public render() {
-    const { isScanning, devices } = this.state;
+    const { scannedDevices } = this.props;
+
     return (
       <View style={{ flex: 1, width: '100%' }}>
         <View style={{ flex: 1, alignSelf: 'flex-end' }}>
-          {!isScanning ? (
+          {!scannedDevices.loading ? (
             <Button title="Start scanning" onPress={this.scanAndConnect} />
           ) : (
             <Button title="Stop scanning" onPress={this.stopScanning} />
           )}
         </View>
-        <FlatList
-          renderItem={this.renderDeviceItem}
-          keyExtractor={this.keyExtractorId}
-          data={devices.getOrElse([])}
-        />
+        {scannedDevices.ready ? (
+          <FlatList
+            renderItem={this.renderDeviceItem}
+            keyExtractor={this.keyExtractorId}
+            data={scannedDevices.value}
+          />
+        ) : (
+          <Text>No values</Text>
+        )}
       </View>
     );
   }
 
   private onPress = (deviceId: string) => {
-    this.manager.connectToDevice(deviceId);
+    this.props.connectToDevice({ id: deviceId });
   };
 
   private renderDeviceItem = ({ item }: ListRenderItemInfo<Device>) => (
-    <View style={{ flexDirection: 'column', flex: 1 }}>
-      <Text>{item.id}</Text>
-      <Text>{item.name}</Text>
-      <View>
+    <FlexView style={{ flexDirection: 'row', flex: 1 }}>
+      <FlexView>
+        <Text>{item.id}</Text>
+        <Text>{item.name}</Text>
+      </FlexView>
+      <FlexView>
         <Button title="Connect" onPress={() => this.onPress(item.id)} />
-      </View>
-    </View>
+      </FlexView>
+    </FlexView>
   );
 
   private keyExtractorId = (device: Device) => device.id;
 
   private stopScanning = () => {
-    this.setState(
-      {
-        isScanning: false
-      },
-      this.manager.stopDeviceScan
-    );
+    this.props.stopScan({});
   };
 
   private scanAndConnect = async () => {
@@ -85,46 +82,11 @@ export default class Scan extends React.Component<{}, State> {
     if (result === 'granted') {
       setTimeout(() => {
         this.stopScanning();
-      }, 10 * 1000);
+      }, 60 * 1000);
 
-      this.setState(
-        {
-          isScanning: true
-        },
-        () => {
-          const subscription = this.manager.onStateChange(state => {
-            if (state === 'PoweredOn') {
-              this.manager.startDeviceScan(
-                null,
-                null,
-                async (error, device) => {
-                  if (error) {
-                    // tslint:disable-next-line:no-console
-                    console.log(error);
-                    // Handle error (scanning will be stopped automatically)
-                    return;
-                  }
-
-                  if (device.name === 'JINOUBeacon') {
-                    if (
-                      !this.state.devices.exists(
-                        dvs => !!dvs.find(d => d.id === device.id)
-                      )
-                    ) {
-                      this.setState({
-                        devices: this.state.devices
-                          .map(devices => devices.concat([device]))
-                          .alt(some([device]))
-                      });
-                    }
-                  }
-                }
-              );
-              subscription.remove();
-            }
-          }, true);
-        }
-      );
+      this.props.scan({});
     }
   };
 }
+
+export default queries(commands(Scan));

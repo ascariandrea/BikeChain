@@ -1,7 +1,6 @@
 package com.bikechain.controllers
 
 import wiro.annotation.{command, query}
-import com.bikechain.data.DBConfig
 
 import scala.concurrent.Future
 import com.bikechain.models.{CreateUserBody, Error, NotFoundError, User}
@@ -16,7 +15,6 @@ class UserController()
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  @query
   override def getMe(): Future[Either[NotFoundError, User]] = {
     userDataModel
       .getMe("token")
@@ -27,7 +25,6 @@ class UserController()
 
   }
 
-  @command
   override def create(userBody: CreateUserBody): Future[Either[Error, User]] = {
     userDataModel
       .create(userBody)

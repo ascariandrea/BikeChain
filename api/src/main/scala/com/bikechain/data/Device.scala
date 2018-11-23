@@ -7,7 +7,7 @@ trait DeviceDataModel {
   db: Db =>
 
   import com.bikechain.core.PostgresProfile.api._
-  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   class Devices(tag: Tag) extends Table[Device](tag, "devices") {
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)

@@ -7,18 +7,17 @@ import com.bikechain.models.{Device, Error, NotFoundError, User}
 import com.bikechain.routers.{DevicesAPI, UsersAPI}
 import io.circe.{Decoder, Encoder}
 import wiro.Config
-import wiro.server.akkaHttp._
 import io.circe.generic.auto._
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.syntax._
-import wiro.server.akkaHttp.ToHttpResponse
-import wiro.server.akkaHttp.FailSupport._
 import akka.http.scaladsl.model.{
   ContentType,
   HttpEntity,
   HttpResponse,
   StatusCodes
 }
+import wiro.server.akkaHttp._
+import wiro.server.akkaHttp.FailSupport._
 import akka.http.scaladsl.model.MediaTypes
 import com.typesafe.config.ConfigFactory
 
@@ -28,7 +27,7 @@ object BikeChainApp extends App with RouterDerivationModule {
   implicit val ec = system.dispatcher
 
   implicit val errorDecoder: Decoder[Error] = deriveDecoder
-  implicit val userNotFoundErrorDecoder: Decoder[NotFoundError] = deriveDecoder
+  implicit val notFoundErrorDecoder: Decoder[NotFoundError] = deriveDecoder
 
   implicit val userDecoder: Decoder[User] = deriveDecoder
   implicit val userEncoder: Encoder[User] = deriveEncoder
@@ -41,8 +40,10 @@ object BikeChainApp extends App with RouterDerivationModule {
   implicit def notFoundToResponse = new ToHttpResponse[NotFoundError] {
     def response(error: NotFoundError) = HttpResponse(
       status = StatusCodes.NotFound,
-      entity = HttpEntity(ContentType(MediaTypes.`application/json`),
-                          error.asJson.noSpaces)
+      entity = HttpEntity(
+        ContentType(MediaTypes.`application/json`),
+        error.asJson.noSpaces
+      )
     )
   }
 
@@ -50,13 +51,15 @@ object BikeChainApp extends App with RouterDerivationModule {
 
     def response(error: Error) = HttpResponse(
       status = StatusCodes.InternalServerError,
-      entity = HttpEntity(ContentType(MediaTypes.`application/json`),
-                          error.asJson.noSpaces)
+      entity = HttpEntity(
+        ContentType(MediaTypes.`application/json`),
+        error.asJson.noSpaces
+      )
     )
   }
 
-  val usersRouter = deriveRouter[UsersAPI](new UserController())
-  val devicesRouter = deriveRouter[DevicesAPI](new DeviceController())
+  val usersRouter = deriveRouter[UsersAPI](new UserController)
+  val devicesRouter = deriveRouter[DevicesAPI](new DeviceController)
 
   CreateTables.createIfNotExist()
 
@@ -64,4 +67,5 @@ object BikeChainApp extends App with RouterDerivationModule {
     config = Config("0.0.0.0", 8080),
     routers = List(usersRouter, devicesRouter)
   )
+
 }

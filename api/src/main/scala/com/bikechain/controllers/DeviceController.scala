@@ -1,7 +1,7 @@
 package com.bikechain.controllers
 import com.bikechain.config.BikeChainConfig
-import com.bikechain.models.{Device, Error, NotFoundError}
 import com.bikechain.data.{DBConfig, Db, DeviceDataModel}
+import com.bikechain.models.{Device, Error, NotFoundError}
 import com.bikechain.routers.DevicesAPI
 
 import scala.concurrent.Future
@@ -13,7 +13,7 @@ class DeviceController()
     with Db
     with DeviceDataModel {
 
-  // import scala.concurrent.ExecutionContext.Implicits.global
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   override def getById(id: Int): Future[Either[NotFoundError, Device]] =
     deviceDataModel
