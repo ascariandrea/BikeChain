@@ -16,6 +16,7 @@
     "axios": "^0.18.0",
     "fp-ts": "^1.11",
     "io-ts": "^1.4.1",
+    "native-base": "^2.8.1",
     "react": "^16.5.2",
     "react-avenger": "^8.0.1",
     "react-native": "0.57.1",
