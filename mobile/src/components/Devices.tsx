@@ -15,19 +15,20 @@ type Props = typeof queries.Props & typeof commands.Props;
 
 function Devices(props: Props) {
   return (
-    <FlexView>
+    <FlexView direction="row">
       {props.devices.ready ? (
         props.devices.value.fold<JSX.Element | JSX.Element[]>(
           () => <Text>No devices :/</Text>,
           (ds: Device[]) => (
             <FlexView>
-              <List>
-                {ds.map((d, k) => (
+              <List
+                dataArray={ds}
+                renderRow={(d, k) => (
                   <ListItem key={k} noIndent={true}>
                     <Text>{d.name}</Text>
                   </ListItem>
-                ))}
-              </List>
+                )}
+              />
             </FlexView>
           )
         )
@@ -36,15 +37,7 @@ function Devices(props: Props) {
           <Text>Loading devices...</Text>
         </FlexView>
       )}
-      <FlexView
-        style={{
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '100%',
-          backgroundColor: 'green'
-        }}
-      >
+      <FlexView style={{ alignItems: 'center', alignContent: 'center' }}>
         <Button onPress={() => props.refreshDevices({})}>
           <Text>Refresh</Text>
         </Button>

@@ -1,3 +1,12 @@
+import { ask, Reader } from 'fp-ts/lib/Reader';
 import { state } from '../state';
 
-export const scannedDevices = state.scannedDevices.query;
+const getBLEQueries = () => ({
+  scannedDevices: state.scannedDevices.query
+});
+
+type BLEQueries = ReturnType<typeof getBLEQueries>;
+
+export const BLEQueriesReader: Reader<BLEQueries, BLEQueries> = ask<
+  BLEQueries
+>().map(getBLEQueries);

@@ -7,6 +7,7 @@ import Axios, {
 } from 'axios';
 import { ask, Reader } from 'fp-ts/lib/Reader';
 import { ReaderTaskEither, tryCatch } from 'fp-ts/lib/ReaderTaskEither';
+import { config } from '../config';
 import { state } from '../state';
 
 interface ClientConfig {
@@ -51,20 +52,23 @@ const makeClient: Reader<ClientConfig, Client> = ask<ClientConfig>().map(
     return {
       get: <T>(
         url: string,
-        config?: AxiosRequestConfig
+        axiosReqConfig?: AxiosRequestConfig
       ): ReaderTaskEither<ClientMethodsConfig, AxiosError, T> =>
         tryCatch(
-          () => handlePromise(clientConfig)(axiosInstance.get(url, config)),
+          () =>
+            handlePromise(clientConfig)(axiosInstance.get(url, axiosReqConfig)),
           handleError(clientConfig)
         ),
       post: <T>(
         url: string,
         data: any,
-        config?: AxiosRequestConfig
+        axiosReqConfig?: AxiosRequestConfig
       ): ReaderTaskEither<ClientMethodsConfig, AxiosError, T> =>
         tryCatch(
           () =>
-            handlePromise(clientConfig)(axiosInstance.post(url, data, config)),
+            handlePromise(clientConfig)(
+              axiosInstance.post(url, data, axiosReqConfig)
+            ),
           handleError(clientConfig)
         )
     };
@@ -72,7 +76,7 @@ const makeClient: Reader<ClientConfig, Client> = ask<ClientConfig>().map(
 );
 
 export const client = makeClient.run({
-  baseURL: 'http://192.168.1.230:8080',
+  baseURL: config.baseURL,
   responseMapper(res) {
     return res.data;
   },

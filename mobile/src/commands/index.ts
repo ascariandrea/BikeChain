@@ -1,10 +1,11 @@
+import { BLEManager, GATTParser } from '../services';
 import * as apiCommands from './apiCommands';
-import { makeBLECommands } from './bleCommands';
+import { makeBLECommands as BLECommandsReader } from './bleCommands';
+import * as permissionCommands from './permissionCommands';
 
-const bleCommands = makeBLECommands.run({
-  restoreStateIdentifier: 'id',
-  // tslint:disable-next-line:no-console
-  restoreStateFunction: console.log
+const bleCommands = BLECommandsReader.run({
+  BLEManager,
+  GATTParser
 });
 
-export { apiCommands, bleCommands };
+export { apiCommands, bleCommands, permissionCommands };

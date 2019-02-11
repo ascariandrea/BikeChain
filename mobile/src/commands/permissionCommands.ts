@@ -1,9 +1,13 @@
 import { Command } from 'avenger';
 import { tryCatch } from 'fp-ts/lib/Task';
 import { PermissionsAndroid } from 'react-native';
+import { accessCoarseLocation } from '../queries/permissionQueries';
 
-export const accessFineLocation = Command({
+export const doAccessCoarseLocation = Command({
   params: {},
+  invalidates: {
+    accessCoarseLocation
+  },
   run: () =>
     tryCatch(
       () =>

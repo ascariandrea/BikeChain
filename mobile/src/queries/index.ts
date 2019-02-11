@@ -1,4 +1,11 @@
+import { BLEManager, GATTParser } from '../services';
 import * as apiQueries from './apiQueries';
-import * as bleQueries from './bleQueries';
+import { BLEQueriesReader } from './bleQueries';
+import * as permissionQueries from './permissionQueries';
 
-export { apiQueries, bleQueries };
+const bleQueries = BLEQueriesReader.run({
+  BLEManager,
+  GATTParser
+});
+
+export { apiQueries, bleQueries, permissionQueries };

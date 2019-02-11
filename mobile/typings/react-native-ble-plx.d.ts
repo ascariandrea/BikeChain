@@ -1,7 +1,35 @@
 declare module 'react-native-ble-plx' {
+  type UUID = string;
+  interface Characteristic {
+    deviceID: string;
+    id: number;
+    isIndicatable: boolean;
+    isNotifiable: boolean;
+    isNotifying: boolean;
+    isReadable: boolean;
+    isWritableWithResponse: boolean;
+    isWritableWithoutResponse: boolean;
+    serviceID: number;
+    serviceUUID: UUID;
+    uuid: UUID;
+    value: any;
+  }
+
+  interface Service {
+    deviceID: string;
+    id: number;
+    isPrimary: boolean;
+    uuid: string;
+    characteristics(): Promise<Characteristic[]>;
+  }
+
   interface Device {
     id: string;
     name: string;
+    isConnected(): Promise<boolean>;
+    discoverAllServicesAndCharateristics(): Promise<Device>;
+    services(): Promise<Service[]>;
+    characteristicsForService(serviceUUID: UUID): Promise<Characteristic[]>;
   }
 
   interface Subscription {
@@ -9,39 +37,59 @@ declare module 'react-native-ble-plx' {
   }
 
   type BleManagerState = 'PoweredOn' | 'PoweredOff';
-  type BleErrorCodeMessageMapping = {};
+  interface BleErrorCodeMessageMapping {}
 
   interface BleRestoredState {
-    connectedPeripherals: Array<Device>;
+    connectedPeripherals: Device[];
   }
 
   interface BleManagerOptions {
     restoreStateIdentifier?: string;
-    restoreStateFunction?(restoredState: BleRestoredState): void;
     errorCodesToMessagesMapping?: BleErrorCodeMessageMapping;
+    restoreStateFunction?(restoredState: BleRestoredState): void;
   }
 
   interface ConnectOptions {
     autoConnect?: boolean;
-    requestMTU?: boolean;
+    requestMTU?: number;
+  }
+
+  interface ScanOptions {
+    allowDuplicates?: boolean;
   }
 
   export class BleManager {
     constructor(options: BleManagerOptions);
-    onStateChange(
+    public onStateChange(
       f: (state: BleManagerState) => void,
       flag: boolean
     ): Subscription;
-    startDeviceScan(
-      a: any,
-      b: any,
+    public startDeviceScan(
+      UUIDs: UUID[] | null,
+      b: ScanOptions | null,
       f: (error: Error, device: Device) => void
     ): void;
-    stopDeviceScan(): void;
-    connectToDevice(
+    public stopDeviceScan(): Promise<void>;
+    public connectToDevice(
       deviceIdentifier: string,
       options?: ConnectOptions
     ): Promise<Device>;
-    cancelDeviceConnection(deviceIdentifier: string): Promise<Device>;
+    public cancelDeviceConnection(deviceIdentifier: string): Promise<Device>;
+    public discoverAllServicesAndCharacteristicsForDevice(
+      deviceId: Device['id']
+    ): Promise<Device>;
+    public readCharacteristicForDevice(
+      deviceIdentifier: Device['id'],
+      serviceUUID: UUID,
+      characteristicUUID: UUID
+    ): Promise<Characteristic>;
+    public servicesForDevice(
+      deviceIdentifier: Device['id']
+    ): Promise<Service[]>;
+
+    public characteristicsForDevice(
+      deviceId: Device['id'],
+      serviceUUID: UUID
+    ): Promise<Characteristic[]>;
   }
 }
