@@ -1,17 +1,18 @@
 import { ask, Reader } from 'fp-ts/lib/Reader';
 import { tryCatch } from 'fp-ts/lib/TaskEither';
-import * as t from 'io-ts';
 import {
   BleManager,
   BleManagerOptions,
   ConnectOptions,
-  Device
+  Device,
+  Error
 } from 'react-native-ble-plx';
 
-export const bleService = t.interface({});
-export const bleCharacteristic = t.interface({});
-
-const errorHandler = (e: unknown): Error => e as Error;
+const errorHandler = (e: unknown): Error => {
+  // tslint:disable-next-line:no-console
+  console.log(e);
+  return e as Error;
+};
 
 const taskifiedBLEManager = (bleM: BleManager) => ({
   startDeviceScanning: () => {

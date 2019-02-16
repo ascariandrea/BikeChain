@@ -2,7 +2,7 @@ import { Button, List, ListItem, Text } from 'native-base';
 import * as React from 'react';
 import { declareCommands, declareQueries } from 'react-avenger';
 import { apiCommands } from '../commands';
-import { Device } from '../models/Device';
+import { Device } from '../models';
 import { apiQueries } from '../queries';
 import { FlexView } from './common/FlexView';
 

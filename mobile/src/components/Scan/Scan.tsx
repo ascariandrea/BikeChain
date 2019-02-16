@@ -74,13 +74,11 @@ class Scan extends React.Component<Props, State> {
   }
 
   private onPress = (deviceId: string) => {
-    this.props
-      .discoverAllServicesAndCharacteristicsForDevice({ deviceId })
-      .then(result => {
-        result.map(() => {
-          this.props.navigation.navigate(ROUTES.DEVICE_DETAILS);
-        });
+    this.props.connectToDevice({ id: deviceId }).then(result => {
+      result.map(() => {
+        this.props.navigation.navigate(ROUTES.DEVICE_DETAILS);
       });
+    });
   };
 
   private renderDeviceItem = (item: Device) => (

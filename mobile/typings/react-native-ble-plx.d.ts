@@ -92,4 +92,9 @@ declare module 'react-native-ble-plx' {
       serviceUUID: UUID
     ): Promise<Characteristic[]>;
   }
+
+  interface Error {
+    name: string;
+    message: string;
+  }
 }

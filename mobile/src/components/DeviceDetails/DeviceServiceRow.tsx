@@ -1,23 +1,25 @@
-import { fromNullable } from 'fp-ts/lib/Option';
+import { fromNullable, fromPredicate } from 'fp-ts/lib/Option';
 import * as React from 'react';
 import { Text } from 'react-native';
-import { Service } from '../../services/GATT';
+import { Characteristic, Service } from '../../models';
 import { FlexView } from '../common';
 
 interface Props {
   service: Service;
+  characteristics: Characteristic[];
   onCharacteristicPress(serviceUUID: string, characteristicUUID: string): void;
 }
 
 export default function DeviceServiceRow(props: Props) {
-  const { service } = props;
-
+  const { service, characteristics } = props;
   return (
     <FlexView>
       <Text>{service.name}</Text>
       <FlexView>
         <Text>Characteristics</Text>
-        {fromNullable(service.charateristics).fold(
+        {fromPredicate<Characteristic[]>(c => c.length > 0)(
+          characteristics
+        ).fold(
           [<Text key="no-characteristics">No charateristics</Text>],
           characterictics =>
             characterictics.map(c => (

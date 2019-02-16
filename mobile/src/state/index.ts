@@ -1,25 +1,11 @@
-import * as t from 'io-ts';
 import { memoryValue } from '../state/memoryValue';
-
-const error = t.interface({
-  message: t.string
-});
-
-const scannedDevices = t.array(
-  t.interface({
-    id: t.string,
-    name: t.string
-  })
-);
-
-const services = t.array(t.any);
-const characteristics = t.array(t.any);
-
-const device = t.interface({
-  id: t.string,
-  services: t.any,
-  characteristics: t.any
-});
+import {
+  characteristics,
+  device,
+  error,
+  scannedDevices,
+  services
+} from './State';
 
 export const state = {
   error: memoryValue(error),
@@ -28,3 +14,5 @@ export const state = {
   services: memoryValue(services),
   characteristics: memoryValue(characteristics)
 };
+
+export type State = typeof state;

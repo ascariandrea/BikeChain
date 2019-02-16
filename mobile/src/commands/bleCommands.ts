@@ -5,14 +5,16 @@ import { taskEither, TaskEither, tryCatch } from 'fp-ts/lib/TaskEither';
 import { sequence } from 'fp-ts/lib/Traversable';
 import { Tuple } from 'fp-ts/lib/Tuple';
 import * as t from 'io-ts';
+import { Characteristic, Service } from '../models';
 import { bleQueries } from '../queries';
 import { BLEManager } from '../services/ble';
 import { GATTParser } from '../services/GATT';
-import { state } from '../state';
+import { State } from '../state';
 
 const getBLECommands = ({
   BLEManager: BLEM,
-  GATTParser: GATTP
+  GATTParser: GATTP,
+  state
 }: BLECommandsConfig) => ({
   scan: Command({
     params: {},
@@ -35,7 +37,7 @@ const getBLECommands = ({
   }),
   stopScan: Command({
     params: {},
-    run: BLEM.stopDeviceScan().run
+    run: () => BLEM.stopDeviceScan().run()
   }),
   connectToDevice: Command({
     params: {
@@ -43,14 +45,14 @@ const getBLECommands = ({
     },
     run: ({ id }) =>
       BLEM.connectToDevice(id, {
-        autoConnect: false,
         requestMTU: 23
       })
         .map(d =>
           state.device.set({
             id: d.id,
-            services: undefined,
-            characteristics: undefined
+            name: d.name,
+            services: [],
+            characteristics: []
           })
         )
         .run()
@@ -59,10 +61,13 @@ const getBLECommands = ({
     params: {
       deviceId: t.string
     },
-    run: ({ deviceId }) =>
-      BLEM.discoverAllServicesAndCharacteristicsForDevice(deviceId)
-        .chain(device =>
-          GATTP.chain(parser =>
+    invalidates: {
+      device: state.device.query
+    },
+    run: ({ deviceId }) => {
+      return BLEM.discoverAllServicesAndCharacteristicsForDevice(deviceId)
+        .chain(device => {
+          return GATTP.chain(parser =>
             BLEM.servicesForDevice(device.id).chain(services =>
               sequence(taskEither, array)(
                 services.map(s =>
@@ -70,24 +75,38 @@ const getBLECommands = ({
                 )
               )
                 .map(flatten)
-                .map(
-                  characteristics =>
-                    new Tuple(
-                      services.map(s => parser.parseService(s)),
-                      characteristics.map(c => parser.parseCharateristic(c))
+                .map(characteristics => {
+                  return new Tuple(
+                    (services || []).reduce(
+                      (acc, s) =>
+                        parser.parseService(s).fold(acc, _ => [...acc, _]),
+                      [] as Service[]
+                    ),
+                    (characteristics || []).reduce(
+                      (acc, c) =>
+                        parser
+                          .parseCharacteristic(c)
+                          .fold(acc, _ => [...acc, _]),
+                      [] as Characteristic[]
                     )
-                )
+                  );
+                })
             )
-          )
-        )
+          ).map(tuple => new Tuple(tuple, device));
+        })
         .map(result => {
           state.device.set({
-            id: deviceId,
-            services: result.fst,
-            characteristics: result.snd
+            ...result.snd,
+            services: result.fst.fst,
+            characteristics: result.fst.snd
           });
         })
-        .run()
+        .mapLeft(error => {
+          // tslint:disable-next-line:no-console
+          console.log('error', error);
+        })
+        .run();
+    }
   }),
   readCharacteristicForDevice: Command({
     params: {
@@ -104,7 +123,21 @@ const getBLECommands = ({
         serviceUUID,
         characteristicUUID
       )
-        .map(() => undefined)
+        .map(characteristic => {
+          // todo: try to use lens
+          const d = state.device.get();
+          if (d) {
+            state.device.set({
+              ...d,
+              characteristics: d.characteristics.map(
+                c =>
+                  c.uuid === characteristic.uuid
+                    ? { ...c, ...characteristic }
+                    : c
+              )
+            });
+          }
+        })
         .run()
   })
 });
@@ -112,6 +145,8 @@ const getBLECommands = ({
 interface BLECommandsConfig {
   BLEManager: BLEManager;
   GATTParser: TaskEither<Error, GATTParser>;
+
+  state: State;
 }
 
 export const makeBLECommands: Reader<

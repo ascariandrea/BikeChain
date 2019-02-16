@@ -1,7 +1,7 @@
 import { Command } from 'avenger';
 import * as t from 'io-ts';
 import { client } from '../API/Client';
-import { Device } from '../models/Device';
+import { Device } from '../models';
 import { apiQueries } from '../queries';
 
 export const createDevice = Command({

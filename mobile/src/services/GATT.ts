@@ -5,9 +5,10 @@ import { Option } from 'fp-ts/lib/Option';
 import { ask, Reader } from 'fp-ts/lib/Reader';
 import { TaskEither, taskEither, tryCatch } from 'fp-ts/lib/TaskEither';
 import { sequence } from 'fp-ts/lib/Traversable';
-import * as t from 'io-ts';
+import { Tuple } from 'fp-ts/lib/Tuple';
 import * as BLE from 'react-native-ble-plx';
 import * as RNFS from 'react-native-fs';
+import { Characteristic, characteristic, Service, service } from '../models';
 import { requestWriteAccess } from './permissions';
 
 type PropertyValue = 'Mandatory' | 'Excluded';
@@ -83,23 +84,6 @@ interface CharacteristicSchema {
   };
 }
 
-export const characteristic = t.interface({
-  uuid: t.string,
-  name: t.string,
-  description: t.string,
-  value: t.union([t.undefined, t.string])
-});
-
-export type Characteristic = t.TypeOf<typeof characteristic>;
-
-export const service = t.interface({
-  uuid: t.string,
-  name: t.string,
-  type: t.string
-});
-
-export type Service = t.TypeOf<typeof service>;
-
 const mkDir = (dirPath: string): TaskEither<Error, RNFS.ReadDirItem[]> => {
   return tryCatch(
     () => RNFS.mkdir(dirPath).then(() => RNFS.readDir(dirPath)),
@@ -161,29 +145,33 @@ export const GATTServiceParser = (schemas: ServiceSchema[]) => (
   findFirst(
     schemas,
     schema => s.uuid.indexOf(`${schema.Service['@_uuid'].toLowerCase()}-`) > 0
-  ).map(schema => ({
-    uuid: schema.Service['@_uuid'],
-    name: schema.Service['@_name'],
-    type: schema.Service['@_type'],
-    charateristics: undefined
-  }));
+  ).map(schema =>
+    service.encode({
+      name: schema.Service['@_name'],
+      type: schema.Service['@_type'],
+      ...s
+    })
+  );
 
 export const GATTCarateristicParser = (schemas: CharacteristicSchema[]) => (
   c: BLE.Characteristic
 ): Option<Characteristic> =>
   findFirst(schemas, s => {
     return c.uuid.indexOf(`${s.Characteristic['@_uuid'].toLowerCase()}-`) > 0;
-  }).map(schema => ({
-    uuid: schema.Characteristic['@_uuid'],
-    name: schema.Characteristic['@_name'],
-    type: schema.Characteristic['@_type'],
-    description: schema.Characteristic.InformativeText.Abstract,
-    value: undefined
-  }));
+  }).map(schema =>
+    characteristic.encode({
+      uuid: schema.Characteristic['@_uuid'],
+      name: schema.Characteristic['@_name'],
+      type: schema.Characteristic['@_type'],
+      description: schema.Characteristic.InformativeText.Abstract,
+      value: undefined,
+      ...c
+    })
+  );
 
 export interface GATTParser {
   parseService(s: BLE.Service): Option<Service>;
-  parseCharateristic(c: BLE.Characteristic): Option<Characteristic>;
+  parseCharacteristic(c: BLE.Characteristic): Option<Characteristic>;
 }
 
 interface GATTParserReaderConfig {
@@ -199,44 +187,40 @@ export const GATTParserReader: Reader<
   TaskEither<Error, GATTParser>
 > = ask<GATTParserReaderConfig>().map((c: GATTParserReaderConfig) => {
   const servicePath = `${c.xmlFilesDir}/services`;
-  const characteristicPath = `${c.xmlFilesDir}/charateristcs`;
+  const characteristicPath = `${c.xmlFilesDir}/characteristcs`;
 
-  return mkDir(servicePath)
+  return requestWriteAccess()
+    .chain(() => mkDir(servicePath))
     .chain(() => mkDir(characteristicPath))
-    .chain(() => requestWriteAccess())
     .chain(() => {
-      return sequence(taskEither, array)([
-        ...c.services.map(_ =>
+      return sequence(taskEither, array)(
+        c.services.map(_ =>
           downloadSchema(servicePath, c.serviceURL, _).chain(xmlFilePath =>
             loadSchema(xmlFilePath).chain(schema =>
               parseSchema<ServiceSchema>(schema)
             )
           )
         )
-      ]);
+      );
     })
     .chain(serviceSchemas =>
-      sequence(taskEither, array)([
-        ...c.charateristics.map(_ =>
+      sequence(taskEither, array)(
+        c.charateristics.map(_ =>
           downloadSchema(servicePath, c.serviceURL, _).chain(xmlFilePath =>
             loadSchema(xmlFilePath).chain(schema =>
               parseSchema<CharacteristicSchema>(schema)
             )
           )
         )
-      ]).map(
-        (
-          charateristicSchemas: CharacteristicSchema[]
-        ): [ServiceSchema[], CharacteristicSchema[]] => [
-          serviceSchemas,
-          charateristicSchemas
-        ]
+      ).map(
+        (charateristicSchemas: CharacteristicSchema[]) =>
+          new Tuple(serviceSchemas, charateristicSchemas)
       )
     )
     .map(
-      ([serviceSchemas, charateristicSchemas]): GATTParser => ({
-        parseService: GATTServiceParser(serviceSchemas),
-        parseCharateristic: GATTCarateristicParser(charateristicSchemas)
+      (schemasTuple): GATTParser => ({
+        parseService: GATTServiceParser(schemasTuple.fst),
+        parseCharacteristic: GATTCarateristicParser(schemasTuple.snd)
       })
     );
 });
