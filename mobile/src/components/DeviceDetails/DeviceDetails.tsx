@@ -2,7 +2,7 @@ import { Button, Text } from 'native-base';
 import * as React from 'react';
 import { declareCommands, declareQueries } from 'react-avenger';
 import { View } from 'react-native';
-import { bleCommands } from '../../commands';
+import { apiCommands, bleCommands } from '../../commands';
 import { state } from '../../state/index';
 import { styles } from '../../styles';
 import { foldQuery } from '../../utils/utils';
@@ -13,7 +13,7 @@ const queries = declareQueries({
   device: state.device.query
 });
 
-const commands = declareCommands(bleCommands);
+const commands = declareCommands({ ...bleCommands, ...apiCommands });
 
 type Props = typeof queries.Props & typeof commands.Props;
 
@@ -26,8 +26,19 @@ function DeviceDetails(props: Props) {
           () => [<Text key="no-services">No services for this device</Text>],
           d => (
             <FlexView>
-              <Text>{d.id}</Text>
-              <Text>{d.name}</Text>
+              <FlexView>
+                <FlexView>
+                  <Text>{d.id}</Text>
+                  <Text>{d.name}</Text>
+                </FlexView>
+                <Button
+                  onPress={() =>
+                    props.createDevice({ uuid: d.id, name: d.name })
+                  }
+                >
+                  <Text>Register as mine</Text>
+                </Button>
+              </FlexView>
               <Button
                 onPress={() =>
                   props.discoverAllServicesAndCharacteristicsForDevice({

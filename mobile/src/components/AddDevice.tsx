@@ -1,14 +1,10 @@
 import * as React from 'react';
-import { declareCommands } from 'react-avenger';
 import { Text, View } from 'react-native';
 import { NavigationScreenProps } from 'react-navigation';
-import { apiCommands } from '../commands';
 import { styles } from '../styles';
 import Scan from './Scan/index';
 
-const commands = declareCommands({ createDevice: apiCommands.createDevice });
-
-type Props = typeof commands.Props & NavigationScreenProps;
+type Props = NavigationScreenProps;
 
 interface State {
   uuid: string;
@@ -21,10 +17,6 @@ class AddDevice extends React.Component<Props, State> {
     name: ''
   };
 
-  public onSubmit = () => {
-    this.props.createDevice(this.state);
-  };
-
   public render() {
     return (
       <View style={styles.container}>
@@ -35,4 +27,4 @@ class AddDevice extends React.Component<Props, State> {
   }
 }
 
-export default commands(AddDevice);
+export default AddDevice;
