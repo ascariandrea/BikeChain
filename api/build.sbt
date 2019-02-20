@@ -11,12 +11,23 @@ version := "0.1"
 
 scalaVersion := "2.12.8"
 
+val log4jVersion = "2.11.1"
+val slickVersion = "3.2.3"
+val slickJodaMapperVersion = "2.3.0"
+val akkaHTTPVersion = "10.1.7"
+val wiroDep = "io.buildo" %% "wiro-http-server" % "0.7.1"
+
 libraryDependencies ++= Seq(
-  "io.buildo" %% "wiro-http-server" % "0.6.13",
-  "com.typesafe.slick" %% "slick" % "3.2.3",
+  wiroDep,
+  "com.typesafe.slick" %% "slick" % slickVersion,
   "com.github.tminglei" %% "slick-pg" % "0.16.3",
   "com.github.tminglei" %% "slick-pg_circe-json" % "0.16.3",
-  "org.slf4j" % "slf4j-nop" % "1.6.4",
+  "com.github.tototoshi" %% "slick-joda-mapper" % slickJodaMapperVersion,
+  "joda-time" % "joda-time" % "2.7",
+  "org.joda" % "joda-convert" % "1.7",
+  "org.apache.logging.log4j" % "log4j-slf4j-impl" % log4jVersion,
+  "org.apache.logging.log4j" % "log4j-api" % log4jVersion,
+  "org.apache.logging.log4j" % "log4j-core" % log4jVersion,
   "com.typesafe" % "config" % "1.3.2"
 )
 
@@ -27,6 +38,17 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic",
   "io.circe" %% "circe-parser"
 ).map(_ % circeVersion)
+
+libraryDependencies ++= Seq(
+  wiroDep,
+  "org.scalatest" %% "scalatest" % "3.0.5",
+  "com.typesafe.akka" %% "akka-http" % akkaHTTPVersion,
+  "com.typesafe.akka" %% "akka-testkit" % "2.5.14",
+  "com.typesafe.akka" %% "akka-http-testkit" % akkaHTTPVersion,
+  "de.heikoseeberger" %% "akka-http-circe" % "1.24.3"
+).map(_ % Test)
+
+javaOptions += "-Dlog4j.configurationFile=conf/log4j2.xml"
 
 fork in run := true
 cancelable in Global := true

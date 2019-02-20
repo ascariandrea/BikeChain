@@ -1,8 +1,11 @@
 package com.bikechain.controllers
+
+import wiro.Auth
 import com.bikechain.config.BikeChainConfig
-import com.bikechain.data.{DBConfig, Db, DeviceDataModel}
-import com.bikechain.models.{Device, Error, NotFoundError}
+import com.bikechain.data.{DBConfig, Db, DeviceDataModel, UserDataModel}
+import com.bikechain.models.{Device, Error, User}
 import com.bikechain.routers.DevicesAPI
+import com.bikechain.utils.ErrorSerializers
 
 import scala.concurrent.Future
 
@@ -11,23 +14,30 @@ class DeviceController()
     with BikeChainConfig
     with DBConfig
     with Db
-    with DeviceDataModel {
+    with DeviceDataModel
+    with UserDataModel {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  override def getById(id: Int): Future[Either[NotFoundError, Device]] =
+  override def getById(token: Auth, id: Int): Future[Either[Error, Device]] =
     deviceDataModel
       .getDeviceById(id)
-      .map(
-        optD =>
-          optD.fold[Either[NotFoundError, Device]](
-            Left(NotFoundError(s"Can't find a device with the given id: $id")))(
-            Right.apply))
 
-  override def create(uuid: String,
-                      name: String): Future[Either[Error, Device]] =
-    deviceDataModel.createDevice(uuid, name).map(device => Right(device))
+  override def create(
+      token: Auth,
+      uuid: String,
+      name: String
+  ): Future[Either[Error, Device]] = {
+    userDataModel.getMe(token.token).flatMap { result =>
+      result match {
+        case Right(u) => deviceDataModel.createDevice(uuid, name, u.id)
+        case Left(e)  => Future(Left(e))
+      }
+    }
+  }
 
-  override def getMany(): Future[Either[Error, List[Device]]] =
-    deviceDataModel.getMany().map(devices => Right(devices))
+  override def getMany(token: Auth): Future[Either[Error, List[Device]]] = {
+    deviceDataModel.getMany()
+  }
+
 }

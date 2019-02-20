@@ -3,7 +3,7 @@ package com.bikechain
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.bikechain.controllers.{DeviceController, UserController}
-import com.bikechain.models.{Device, Error, NotFoundError, User}
+import com.bikechain.models.{Device, Error, User}
 import com.bikechain.routers.{DevicesAPI, UsersAPI}
 import io.circe.{Decoder, Encoder}
 import wiro.Config
@@ -16,47 +16,21 @@ import akka.http.scaladsl.model.{
   HttpResponse,
   StatusCodes
 }
+import scala.util.control.NonFatal
 import wiro.server.akkaHttp._
 import wiro.server.akkaHttp.FailSupport._
 import akka.http.scaladsl.model.MediaTypes
 import com.typesafe.config.ConfigFactory
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
+import com.bikechain.utils.WiroSupport
 
-object BikeChainApp extends App with RouterDerivationModule {
+object BikeChainApp extends App with WiroSupport with RouterDerivationModule {
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer()
   implicit val ec = system.dispatcher
 
-  implicit val errorDecoder: Decoder[Error] = deriveDecoder
-  implicit val notFoundErrorDecoder: Decoder[NotFoundError] = deriveDecoder
-
-  implicit val userDecoder: Decoder[User] = deriveDecoder
-  implicit val userEncoder: Encoder[User] = deriveEncoder
-
-  implicit val deviceDecoder: Decoder[Device] = deriveDecoder
-  implicit val deviceEncoder: Encoder[Device] = deriveEncoder
-
   implicit val config = ConfigFactory.load("com/bikechain")
-
-  implicit def notFoundToResponse = new ToHttpResponse[NotFoundError] {
-    def response(error: NotFoundError) = HttpResponse(
-      status = StatusCodes.NotFound,
-      entity = HttpEntity(
-        ContentType(MediaTypes.`application/json`),
-        error.asJson.noSpaces
-      )
-    )
-  }
-
-  implicit def errorToResponse = new ToHttpResponse[Error] {
-
-    def response(error: Error) = HttpResponse(
-      status = StatusCodes.InternalServerError,
-      entity = HttpEntity(
-        ContentType(MediaTypes.`application/json`),
-        error.asJson.noSpaces
-      )
-    )
-  }
 
   val usersRouter = deriveRouter[UsersAPI](new UserController)
   val devicesRouter = deriveRouter[DevicesAPI](new DeviceController)

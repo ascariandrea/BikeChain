@@ -1,7 +1,8 @@
 package com.bikechain.routers
 
+import wiro.Auth
 import wiro.annotation.{command, path, query}
-import com.bikechain.models.{Error, NotFoundError, Device}
+import com.bikechain.models.{Error, Device}
 
 import scala.concurrent.Future
 
@@ -9,11 +10,15 @@ import scala.concurrent.Future
 trait DevicesAPI {
 
   @query
-  def getMany(): Future[Either[Error, List[Device]]]
+  def getMany(token: Auth): Future[Either[Error, List[Device]]]
 
   @query
-  def getById(id: Int): Future[Either[NotFoundError, Device]]
+  def getById(token: Auth, id: Int): Future[Either[Error, Device]]
 
   @command
-  def create(uuid: String, name: String): Future[Either[Error, Device]]
+  def create(
+      token: Auth,
+      uuid: String,
+      name: String
+  ): Future[Either[Error, Device]]
 }

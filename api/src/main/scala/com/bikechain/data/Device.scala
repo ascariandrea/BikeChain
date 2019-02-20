@@ -1,7 +1,9 @@
 package com.bikechain.data
 
-import com.bikechain.models.Device
+import com.bikechain.models.{Device, Error}
 import scala.concurrent.{Future, ExecutionContext}
+import scala.util.{Failure, Success, Try}
+import com.bikechain.data.utils.DBSerializers
 
 trait DeviceDataModel {
   db: Db =>
@@ -12,30 +14,47 @@ trait DeviceDataModel {
   class Devices(tag: Tag) extends Table[Device](tag, "devices") {
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
 
-    def uuid = column[String]("uuid")
+    def uuid = column[String]("uuid", O.Unique)
 
     def name = column[String]("name")
 
-    def * = (id.?, uuid, name) <> (Device.tupled, Device.unapply)
+    def userId = column[Int]("user_id")
+
+    def * = (id.?, uuid, name, userId) <> (Device.tupled, Device.unapply)
   }
 
   val devices = TableQuery[Devices]
+  val devicesDB = db.dbConfig.db
 
   object DeviceDataModel {
-    def getDeviceById(id: Int): Future[Option[Device]] =
-      db.dbConfig.db.run(devices.filter(_.id === id).result.headOption)
 
-    def createDevice(uuid: String, name: String): Future[Device] = {
+    def getDeviceById(id: Int): Future[Either[Error, Device]] =
+      devicesDB
+        .run(devices.filter(_.id === id).result.asTry)
+        .map(DBSerializers.toResult(r => r.headOption))
+
+    def createDevice(
+        uuid: String,
+        name: String,
+        userId: Int
+    ): Future[Either[Error, Device]] = {
       val insertQuery = devices returning devices.map(_.id) into (
-          (item,
-           id) => item.copy(id = Some(id)))
+          (
+              item,
+              id
+          ) => item.copy(id = Some(id))
+      )
 
-      val action = insertQuery += Device(None, uuid, name)
-      db.dbConfig.db.run(action)
+      val action = insertQuery += Device(None, uuid, name, userId)
+      db.dbConfig.db
+        .run(action.asTry)
+        .map(DBSerializers.toResult(d => Some(d)))
     }
 
-    def getMany(): Future[List[Device]] =
-      db.dbConfig.db.run(devices.result).map(devicesSeq => devicesSeq.toList)
+    def getMany(): Future[Either[Error, List[Device]]] =
+      db.dbConfig.db
+        .run(devices.result.asTry)
+        .map(DBSerializers.toResult(d => Some(d.toList)))
   }
 
   lazy val deviceDataModel = DeviceDataModel

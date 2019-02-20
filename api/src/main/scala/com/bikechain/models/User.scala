@@ -1,18 +1,38 @@
 package com.bikechain.models
 
-import akka.http.scaladsl.model.DateTime
+import org.joda.time.DateTime
 
 case class User(
-    id: Option[Int] = None,
+    id: Int,
     email: String,
     password: String,
-    token: Option[String],
-    // todo: should be a Date
+    salt: String,
+    token: Option[String] = None,
+    createdAt: DateTime
+)
+
+case class APIUser(
+    id: Int,
+    email: String,
     createdAt: String
 )
 
-case class CreateUserBody(
+object APIUser {
+  def fromDataUser(u: User): APIUser =
+    APIUser(
+      id = u.id,
+      email = u.email,
+      createdAt = u.createdAt.toString
+    )
+}
+
+case class SignUpBody(
     email: String,
     password: String,
     passwordConfirmation: String
+)
+
+case class LoginBody(
+    email: String,
+    password: String
 )
