@@ -15,11 +15,7 @@ import akka.http.scaladsl.model.headers.{RawHeader}
 import scala.util.Try
 import com.bikechain.utils.HashUtil
 
-class DeviceRouterTest
-    extends FlatSpec
-    with Matchers
-    with ScalatestRouteTest
-    with RouterTest {
+class DeviceRouterTest extends RouterTest with Matchers {
 
   var device: APIDevice = null
   val deviceUUID = HashUtil.randomAlphanumericString(10)

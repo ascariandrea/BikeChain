@@ -15,12 +15,7 @@ import akka.http.scaladsl.model.headers.{RawHeader}
 import scala.util.Try
 import com.bikechain.utils.{HashUtil}
 
-class UserRouterTest
-    extends FlatSpec
-    with Matchers
-    with ScalatestRouteTest
-    with WiroSupport
-    with RouterTest {
+class UserRouterTest extends RouterTest with Matchers {
 
   val userEmail = s"${HashUtil.randomAlphanumericString(10)}@bikechain.com"
 

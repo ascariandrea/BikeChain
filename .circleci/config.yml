@@ -5,36 +5,44 @@
 version: 2
 jobs:
   build:
-    docker:
-      # specify the version you desire here
-      - image: circleci/openjdk:8-jdk
-
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
-
     working_directory: ~/repo/api
+    docker:
+      - image: codestar/circleci-scala-sbt-git:scala-2.12.6-sbt-1.1.6
+      # specify the version you desire here
+      - image: circleci/postgres:9.6.2-alpine
+        environment:
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: bikechain
 
-    environment:
-      # Customize the JVM maximum heap limit
-      # JVM_OPTS: -Xmx3200m
-      # TERM: dumb
 
     steps:
-      - checkout
+      - checkout:
+          path: ~/repo
       # Download and cache dependencies
       - restore_cache:
           keys:
             - v1-dependencies-{{ checksum "build.sbt" }}
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
-      - run: cat /dev/null | sbt test:compile
+      - run: sbt "runMain com.bikechain.data.CreateTables"
+      # run tests coverage
+      - run: sbt coverage test:compile
+
+      - run: sbt coverage test
 
       - save_cache:
-          paths:
-            - ~/.m2
           key: v1-dependencies-{{ checksum "build.sbt" }}
+          paths:
+            - "~/.ivy2/cache"
+            - "~/.sbt"
+            - "~/.m2"
 
       # run tests!
-      - run: cat /dev/null | sbt test:test
+      - run: sbt coverageReport
+
+      - store_test_results:
+          path: target/test-reports
+
+      - store_artifacts:
+          path: target/scala-2.12/scoverage-report

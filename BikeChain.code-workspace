@@ -5,7 +5,12 @@
     },
     {
       "path": "mobile"
+    },
+    {
+      "path": ".circleci"
     }
   ],
-  "settings": {}
+  "settings": {
+    "java.configuration.updateBuildConfiguration": "interactive"
+  }
 }

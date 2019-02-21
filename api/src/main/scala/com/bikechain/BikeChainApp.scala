@@ -35,8 +35,6 @@ object BikeChainApp extends App with WiroSupport with RouterDerivationModule {
   val usersRouter = deriveRouter[UsersAPI](new UserController)
   val devicesRouter = deriveRouter[DevicesAPI](new DeviceController)
 
-  CreateTables.createIfNotExist()
-
   val rpcServer = new HttpRPCServer(
     config = Config("0.0.0.0", 8080),
     routers = List(usersRouter, devicesRouter)

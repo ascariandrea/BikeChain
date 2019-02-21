@@ -20,6 +20,7 @@ val wiroDep = "io.buildo" %% "wiro-http-server" % "0.7.1"
 libraryDependencies ++= Seq(
   wiroDep,
   "com.typesafe.slick" %% "slick" % slickVersion,
+  "com.typesafe.slick" %% "slick-hikaricp" % "3.2.0",
   "com.github.tminglei" %% "slick-pg" % "0.16.3",
   "com.github.tminglei" %% "slick-pg_circe-json" % "0.16.3",
   "com.github.tototoshi" %% "slick-joda-mapper" % slickJodaMapperVersion,
@@ -48,9 +49,24 @@ libraryDependencies ++= Seq(
   "de.heikoseeberger" %% "akka-http-circe" % "1.24.3"
 ).map(_ % Test)
 
-javaOptions += "-Dlog4j.configurationFile=conf/log4j2.xml"
+javaOptions ++= Seq(
+  "-Dlog4j.configurationFile=conf/log4j2.xml"
+)
+
+javaOptions in Test ++= Seq(
+  "-Dlog4j.configurationFile=conf/log4j2.xml",
+  "-Dcom.sun.xml.bind.v2.bytecode.ClassTailor.noOptimize=true"
+)
 
 fork in run := true
+fork in Test := true
 cancelable in Global := true
 
-lazy val root = project in file(".")
+coverageMinimum := 80
+coverageFailOnMinimum := true
+
+lazy val dbSetup = (project in file("data"))
+
+mainClass in (Compile, run) := Some("com.bikechain.BikeChainApp")
+
+lazy val root = (project in file(".")).dependsOn(dbSetup)
