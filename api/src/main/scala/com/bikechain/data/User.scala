@@ -12,10 +12,12 @@ import wiro.Auth
 trait UserDataModel {
   db: Db =>
 
-  import com.bikechain.core.PostgresProfile.api._
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  class Users(tag: Tag) extends Table[User](tag, "users") {
+  class Users(tag: Tag)
+      extends Table[User](tag, "users")
+      with TableWithCreateTimestamp {
+
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
 
     def email = column[String]("email", O.Unique)
@@ -25,12 +27,6 @@ trait UserDataModel {
     def salt = column[String]("salt")
 
     def token = column[Option[String]]("token")
-
-    def createdAt =
-      column[DateTime](
-        "created_at",
-        O.SqlType("timestamp default now()")
-      )
 
     def * =
       (id, email, password, salt, token, createdAt) <> (User.tupled, User.unapply)

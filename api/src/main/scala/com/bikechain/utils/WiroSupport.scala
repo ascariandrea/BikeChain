@@ -3,7 +3,14 @@ package com.bikechain.utils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.bikechain.controllers.{DeviceController, UserController}
-import com.bikechain.models.{Device, Error, APIUser, SignUpBody, LoginBody}
+import com.bikechain.models.{
+  APIDevice,
+  Error,
+  APIUser,
+  SignUpBody,
+  LoginBody,
+  CreateDeviceBody
+}
 import com.bikechain.routers.{DevicesAPI, UsersAPI}
 import io.circe.{Decoder, Encoder}
 import wiro.{Auth, Config}
@@ -14,7 +21,8 @@ import akka.http.scaladsl.model.{
   ContentType,
   HttpEntity,
   HttpResponse,
-  StatusCodes
+  StatusCodes,
+  StatusCode
 }
 import scala.util.control.NonFatal
 import wiro.server.akkaHttp._
@@ -25,6 +33,7 @@ import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 
 trait WiroSupport {
+
   implicit val errorDecoder: Decoder[Error] = deriveDecoder
 
   val dateFormatter = DateTimeFormat.forPattern("yyyyMMdd")
@@ -39,25 +48,29 @@ trait WiroSupport {
   implicit val dateTimeEncoder: Encoder[DateTime] =
     Encoder.encodeString.contramap[DateTime](_.toString)
 
-  implicit val userDecoder: Decoder[APIUser] = deriveDecoder
-  implicit val userEncoder: Encoder[APIUser] = deriveEncoder
+  implicit val authDecoder: Decoder[Auth] = deriveDecoder
+  implicit val authEncoder: Encoder[Auth] = deriveEncoder
 
-  // implicit val signUpBodyDecoder: Decoder[SignUpBody] = deriveDecoder
   implicit val signUpBodyEncoder: Encoder[SignUpBody] = deriveEncoder
   implicit val loginBodyEncoder: Encoder[LoginBody] = deriveEncoder
 
-  implicit val deviceDecoder: Decoder[Device] = deriveDecoder
-  implicit val deviceEncoder: Encoder[Device] = deriveEncoder
+  implicit val userDecoder: Decoder[APIUser] = deriveDecoder
+  implicit val userEncoder: Encoder[APIUser] = deriveEncoder
 
-  implicit val authDecoder: Decoder[Auth] = deriveDecoder
-  implicit val authEncoder: Encoder[Auth] = deriveEncoder
+  implicit val createDeviceBodyEncoder: Encoder[CreateDeviceBody] =
+    deriveEncoder
+  implicit val deviceDecoder: Decoder[APIDevice] = deriveDecoder
+  implicit val deviceEncoder: Encoder[APIDevice] = deriveEncoder
 
   implicit def errorToResponse = new ToHttpResponse[Error] {
 
     def response(error: Error) = {
-      println(error)
       HttpResponse(
-        status = StatusCodes.InternalServerError,
+        status = error.code match {
+          case 401 => StatusCodes.Unauthorized
+          case 422 => StatusCodes.UnprocessableEntity
+          case _   => StatusCodes.InternalServerError
+        },
         entity = HttpEntity(
           ContentType(MediaTypes.`application/json`),
           error.asJson.noSpaces

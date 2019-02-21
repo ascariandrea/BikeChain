@@ -1,3 +1,6 @@
 package com.bikechain.models
 
-case class Error(message: String, code: Int = 500)
+case class Error(
+    message: String,
+    code: Int = 500
+)
