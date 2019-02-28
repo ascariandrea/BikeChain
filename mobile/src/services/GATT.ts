@@ -164,8 +164,8 @@ export const GATTCarateristicParser = (schemas: CharacteristicSchema[]) => (
       name: schema.Characteristic['@_name'],
       type: schema.Characteristic['@_type'],
       description: schema.Characteristic.InformativeText.Abstract,
-      value: undefined,
-      ...c
+      ...c,
+      value: c.value || undefined
     })
   );
 

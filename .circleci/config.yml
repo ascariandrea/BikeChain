@@ -4,7 +4,37 @@
 #
 version: 2
 jobs:
-  build:
+  mobile_test:
+    docker:
+      - image: circleci/node:11
+
+    working_directory: ~/repo/mobile
+    steps:
+      - checkout:
+          path: ~/repo
+      - restore_cache:
+          keys:
+            - v1-mobile-deps-{{ checksum "yarn.lock" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-mobile-deps-
+      - run: yarn install
+      - run: mkdir -p reports/junit/
+
+      - run:
+          environment:
+            JEST_JUNIT_OUTPUT: reports/junit/js-test-results.xml
+          command: yarn test --ci --reporters="jest-junit"
+
+      - save_cache:
+          key: v1-mobile-deps-{{ checksum "yarn.lock" }}
+          paths:
+            - "node_modules"
+      - store_test_results:
+          path: reports/junit
+      - store_artifacts:
+          path: reports/junit
+
+  api_test:
     working_directory: ~/repo/api
     docker:
       - image: codestar/circleci-scala-sbt-git:scala-2.12.6-sbt-1.1.6
@@ -46,3 +76,9 @@ jobs:
 
       - store_artifacts:
           path: target/scala-2.12/scoverage-report
+workflows:
+  version: 2
+  api_and_mobile:
+    jobs:
+      - api_test
+      - mobile_test

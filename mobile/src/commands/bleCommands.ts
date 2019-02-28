@@ -10,6 +10,7 @@ import { bleQueries } from '../queries';
 import { BLEManager } from '../services/ble';
 import { GATTParser } from '../services/GATT';
 import { State } from '../state';
+import { device } from '../state/State';
 
 const getBLECommands = ({
   BLEManager: BLEM,
@@ -27,7 +28,14 @@ const getBLECommands = ({
               runCommand<void, CommandReturn<any, void>>(
                 state.scannedDevices.command,
                 {
-                  value: (devices || []).concat(d)
+                  value: (devices || []).concat(
+                    device.encode({
+                      ...d,
+                      name: d.name || 'Unknown',
+                      characteristics: [],
+                      services: []
+                    })
+                  )
                 }
               ),
             (e: unknown) => e as Error
@@ -50,7 +58,7 @@ const getBLECommands = ({
         .map(d =>
           state.device.set({
             id: d.id,
-            name: d.name,
+            name: d.name || 'Unknown',
             services: [],
             characteristics: []
           })
@@ -66,9 +74,9 @@ const getBLECommands = ({
     },
     run: ({ deviceId }) => {
       return BLEM.discoverAllServicesAndCharacteristicsForDevice(deviceId)
-        .chain(device => {
+        .chain(d => {
           return GATTP.chain(parser =>
-            BLEM.servicesForDevice(device.id).chain(services =>
+            BLEM.servicesForDevice(d.id).chain(services =>
               sequence(taskEither, array)(
                 services.map(s =>
                   BLEM.characteristicsForDevice(s.deviceID, s.uuid)
@@ -92,11 +100,12 @@ const getBLECommands = ({
                   );
                 })
             )
-          ).map(tuple => new Tuple(tuple, device));
+          ).map(tuple => new Tuple(tuple, d));
         })
         .map(result => {
           state.device.set({
             ...result.snd,
+            name: result.snd.name || 'Unknown',
             services: result.fst.fst,
             characteristics: result.fst.snd
           });
@@ -129,11 +138,8 @@ const getBLECommands = ({
           if (d) {
             state.device.set({
               ...d,
-              characteristics: d.characteristics.map(
-                c =>
-                  c.uuid === characteristic.uuid
-                    ? { ...c, ...characteristic }
-                    : c
+              characteristics: d.characteristics.map(c =>
+                c.uuid === characteristic.uuid ? { ...characteristic, ...c } : c
               )
             });
           }

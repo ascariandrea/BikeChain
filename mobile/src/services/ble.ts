@@ -28,9 +28,10 @@ const taskifiedBLEManager = (bleM: BleManager) => ({
                   // Handle error (scanning will be stopped automatically)
                   return reject(error);
                 }
-
-                if (device.name === 'JINOUBeacon') {
-                  return resolve(device);
+                if (device) {
+                  if (device.name === 'JINOUBeacon') {
+                    return resolve(device);
+                  }
                 }
               });
               subscription.remove();
