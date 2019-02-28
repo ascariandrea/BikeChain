@@ -1,6 +1,7 @@
 import { available, Query } from 'avenger';
 import { AxiosError } from 'axios';
 import { Either, left, right } from 'fp-ts/lib/Either';
+import { none, Option, some } from 'fp-ts/lib/Option';
 import { ask, Reader } from 'fp-ts/lib/Reader';
 import { task } from 'fp-ts/lib/Task';
 import { ClientRequestReader } from '../API/Client';
@@ -21,10 +22,7 @@ const makeAPIQueries = ({ client }: APIQueriesConfig) => ({
           client
             .run({ auth, consumeError: true })
             .get<User>('/users/me')
-            .foldTask<Either<AxiosError, User>>(
-              l => task.of(left(l)),
-              r => task.of(right(r))
-            )
+            .foldTask<Option<User>>(_ => task.of(none), r => task.of(some(r)))
         )
         .run()
   }),

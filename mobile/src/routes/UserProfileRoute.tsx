@@ -4,18 +4,18 @@ import {
   NavigationScreenProps,
   NavigationStackScreenOptions
 } from 'react-navigation';
-import AddDevice from '../components/AddDevice';
+import UserProfile from '../components/UserProfile';
 
-export class AddDeviceRoute extends React.Component<
+export class UserProfileRoute extends React.Component<
   NavigationScreenProps<{}, {}>
 > {
   public static navigationOptions: NavigationScreenConfig<
     NavigationStackScreenOptions
   > = () => ({
-    title: 'Add Device'
+    title: 'Login'
   });
 
   public render() {
-    return <AddDevice navigation={this.props.navigation} />;
+    return <UserProfile />;
   }
 }

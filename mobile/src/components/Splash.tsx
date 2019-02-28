@@ -11,7 +11,7 @@ class Splash extends React.Component<Props> {
     getAuth()
       .map(authOpt => {
         if (authOpt.isSome()) {
-          this.props.navigation.navigate(ROUTES.DEVICES);
+          this.props.navigation.navigate(ROUTES.SCAN);
         } else {
           this.props.navigation.navigate(ROUTES.LOGIN);
         }

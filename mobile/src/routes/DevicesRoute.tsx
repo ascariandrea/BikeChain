@@ -11,7 +11,7 @@ export class DevicesRoute extends React.Component {
   public static navigationOptions: NavigationScreenConfig<
     NavigationStackScreenOptions
   > = ({ navigation }) => ({
-    title: 'BikeChain',
+    title: 'Devices',
     headerRight: (
       <Button
         title="Add Device"
