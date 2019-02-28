@@ -23,7 +23,9 @@ function DeviceDetails(props: Props) {
       <FlexView style={{ width: '100%' }}>
         {foldQuery(
           props.device,
-          () => [<Text key="no-services">No services for this device</Text>],
+          () => (
+            <Text key="no-services">No services for this device</Text>
+          ),
           d => (
             <FlexView>
               <FlexView>

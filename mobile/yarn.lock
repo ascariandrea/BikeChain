@@ -2222,13 +2222,14 @@ form-data@~2.3.2:
     combined-stream "1.0.6"
     mime-types "^2.1.12"
 
+fp-ts@1.13.0:
+  version "1.13.0"
+  resolved "https://registry.yarnpkg.com/fp-ts/-/fp-ts-1.13.0.tgz#004803434e6c92021232746a621d3c2429c3d5cc"
+  integrity sha512-QDPtCkuLay+dX3zinnvt0ER+j8mdWZZSpM//DIY3GycgwUTDPBKFD7CxX5DU/mIDstcWqGuuUSrMNtB6MWluCQ==
+
 fp-ts@^1.0.0:
   version "1.10.0"
   resolved "https://registry.yarnpkg.com/fp-ts/-/fp-ts-1.10.0.tgz#f249f07a167f4c13a96baf01794f7e0753de4225"
-
-fp-ts@^1.11:
-  version "1.11.1"
-  resolved "https://registry.yarnpkg.com/fp-ts/-/fp-ts-1.11.1.tgz#72fe5e5bdc964254beec59df2ef213d79d636b9f"
 
 fragment-cache@^0.2.1:
   version "0.2.1"

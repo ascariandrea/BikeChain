@@ -4,10 +4,11 @@ import {
   device,
   error,
   scannedDevices,
-  services
+  services,
+  State
 } from './State';
 
-export const state = {
+export const state: State = {
   error: memoryValue(error),
   scannedDevices: memoryValue(scannedDevices),
   device: memoryValue(device),
@@ -15,4 +16,4 @@ export const state = {
   characteristics: memoryValue(characteristics)
 };
 
-export type State = typeof state;
+export { State };

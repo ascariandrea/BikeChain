@@ -1,5 +1,17 @@
 import * as t from 'io-ts';
 
+const auth = t.interface({
+  token: t.string
+});
+
+export interface Auth extends t.TypeOf<typeof auth> {}
+
+const user = t.interface({
+  email: t.string,
+  password: t.string
+});
+
+export interface User extends t.TypeOf<typeof user> {}
 export const device = t.interface({
   id: t.string,
   name: t.string

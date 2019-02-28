@@ -1,90 +1,97 @@
-import { CommandReturn, runCommand } from 'avenger';
 import Axios, {
   AxiosError,
   AxiosPromise,
   AxiosRequestConfig,
   AxiosResponse
 } from 'axios';
+import { Option } from 'fp-ts/lib/Option';
 import { ask, Reader } from 'fp-ts/lib/Reader';
-import { ReaderTaskEither, tryCatch } from 'fp-ts/lib/ReaderTaskEither';
-import { config } from '../config';
-import { state } from '../state';
+import { TaskEither, tryCatch } from 'fp-ts/lib/TaskEither';
+
+type ResponseMapper = <T>(res: AxiosResponse<any>) => T;
+type ErrorHandler = (e: AxiosError) => void;
 
 interface ClientConfig {
   baseURL: string;
-  responseMapper<T>(res: AxiosResponse<any>): T;
-  onError(e: AxiosError): void;
+  // authToken: Option<string>;
+  responseMapper: ResponseMapper;
+  onError: ErrorHandler;
 }
-interface ClientMethodsConfig {
+
+interface ClientRequestConfig {
+  auth: Option<string>;
   consumeError: boolean;
 }
 
 export interface Client {
-  get<T>(
-    url: string,
-    config?: AxiosRequestConfig
-  ): ReaderTaskEither<ClientMethodsConfig, AxiosError, T>;
+  get<T>(url: string, config?: AxiosRequestConfig): TaskEither<AxiosError, T>;
   post<T>(
     url: string,
     data: any,
     config?: AxiosRequestConfig
-  ): ReaderTaskEither<ClientMethodsConfig, AxiosError, T>;
+  ): TaskEither<AxiosError, T>;
 }
 
-const handlePromise = (clientConfig: ClientConfig) => <T>(
-  p: AxiosPromise<any>
-): Promise<T> => p.then(res => clientConfig.responseMapper<T>(res));
+const makeURL = (b: string, p: string) => `${b}${p}`;
 
-const handleError = (clientConfig: ClientConfig) => (
-  e: unknown,
-  opt: ClientMethodsConfig
+const patchAxiosRequestConfig = (
+  auth: Option<string>,
+  arc: AxiosRequestConfig | undefined
+): AxiosRequestConfig => ({
+  ...arc,
+  headers: auth.fold({}, a => ({ Authorization: `Token token=${a}` }))
+});
+
+const handlePromise = (f: ResponseMapper) => <T>(
+  p: AxiosPromise<any>
+): Promise<T> => p.then(res => f<T>(res));
+
+const handleError = (f: ErrorHandler, consumeError: boolean) => (
+  e: unknown
 ): AxiosError => {
   const axiosError = e as AxiosError;
-  if (opt.consumeError) {
-    clientConfig.onError(axiosError);
+  if (consumeError) {
+    f(axiosError);
   }
   return axiosError;
 };
 
-const makeClient: Reader<ClientConfig, Client> = ask<ClientConfig>().map(
-  clientConfig => {
-    const axiosInstance = Axios.create(clientConfig);
+export type ClientRequestReader = Reader<ClientRequestConfig, Client>;
+export const ClientReader: Reader<ClientConfig, ClientRequestReader> = ask<
+  ClientConfig
+>().map(({ baseURL, responseMapper, onError }) => {
+  return ask<ClientRequestConfig>().map(({ auth, consumeError }) => {
     return {
       get: <T>(
         url: string,
         axiosReqConfig?: AxiosRequestConfig
-      ): ReaderTaskEither<ClientMethodsConfig, AxiosError, T> =>
+      ): TaskEither<AxiosError, T> =>
         tryCatch(
           () =>
-            handlePromise(clientConfig)(axiosInstance.get(url, axiosReqConfig)),
-          handleError(clientConfig)
+            handlePromise(responseMapper)(
+              Axios.get(
+                makeURL(baseURL, url),
+                patchAxiosRequestConfig(auth, axiosReqConfig)
+              )
+            ),
+          handleError(onError, consumeError)
         ),
       post: <T>(
         url: string,
         data: any,
         axiosReqConfig?: AxiosRequestConfig
-      ): ReaderTaskEither<ClientMethodsConfig, AxiosError, T> =>
+      ): TaskEither<AxiosError, T> =>
         tryCatch(
           () =>
-            handlePromise(clientConfig)(
-              axiosInstance.post(url, data, axiosReqConfig)
+            handlePromise(responseMapper)(
+              Axios.post(
+                makeURL(baseURL, url),
+                data,
+                patchAxiosRequestConfig(auth, axiosReqConfig)
+              )
             ),
-          handleError(clientConfig)
+          handleError(onError, consumeError)
         )
     };
-  }
-);
-
-export const client = makeClient.run({
-  baseURL: config.baseURL,
-  responseMapper(res) {
-    return res.data;
-  },
-  onError(e: AxiosError) {
-    // tslint:disable-next-line:no-console
-    console.dir(e);
-    runCommand<void, CommandReturn<any, void>>(state.error.command, {
-      value: e
-    });
-  }
+  });
 });
