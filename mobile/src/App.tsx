@@ -6,8 +6,9 @@ import {
   createStackNavigator,
   createSwitchNavigator
 } from 'react-navigation';
-import { AddDeviceRoute } from './routes/AddDeviceRoute';
+import { AddDevicesRoute } from './routes/AddDevicesRoute';
 import { DeviceDetailsRoute } from './routes/DeviceDetailsRoute';
+import { DevicesRoute } from './routes/DevicesRoute';
 import { LoginRoute } from './routes/LoginRoute';
 import { ROUTES } from './routes/routes';
 import ScanRoute from './routes/ScanRoute';
@@ -19,7 +20,7 @@ const getIconNameFromRouteName = (routeName: string): string => {
     case ROUTES.SCAN: {
       return 'qr-scanner';
     }
-    case ROUTES.ADD_DEVICE: {
+    case ROUTES.DEVICES: {
       return 'pricetags';
     }
     default:
@@ -35,10 +36,14 @@ const AppContainer = createAppContainer(
       Auth: createBottomTabNavigator(
         {
           [ROUTES.SCAN]: ScanRoute,
-          [ROUTES.ADD_DEVICE]: createStackNavigator({
-            [ROUTES.ADD_DEVICE]: AddDeviceRoute,
-            [ROUTES.DEVICE_DETAILS]: DeviceDetailsRoute
-          }),
+          [ROUTES.DEVICES]: createStackNavigator(
+            {
+              [ROUTES.DEVICES]: DevicesRoute,
+              [ROUTES.ADD_DEVICE]: AddDevicesRoute,
+              [ROUTES.DEVICE_DETAILS]: DeviceDetailsRoute
+            },
+            { initialRouteName: ROUTES.DEVICES }
+          ),
           Profile: createStackNavigator({
             [ROUTES.USER_PROFILE]: UserProfileRoute
           })

@@ -1,30 +1,28 @@
 import * as React from 'react';
-import { Text, View } from 'react-native';
-import { NavigationScreenProps } from 'react-navigation';
-import { styles } from '../styles';
-import Scan from './Scan/index';
+import { declareCommands, declareQueries } from 'react-avenger';
+import { bleCommands } from '../commands';
+import { bleQueries } from '../queries';
+import { FlexView } from './common';
+import Scan from './Scan';
 
-type Props = NavigationScreenProps;
+const queries = declareQueries({
+  scannedDevices: bleQueries.scannedDevices
+});
 
-interface State {
-  uuid: string;
-  name: string;
-}
+const commands = declareCommands({
+  scan: bleCommands.scan
+});
 
-class AddDevice extends React.Component<Props, State> {
-  public state: State = {
-    uuid: '',
-    name: ''
-  };
+type Props = typeof queries.Props & typeof commands.Props;
 
+class AddDevice extends React.Component<Props> {
   public render() {
     return (
-      <View style={styles.container}>
-        <Text>Register a device</Text>
-        <Scan navigation={this.props.navigation} />
-      </View>
+      <FlexView>
+        <Scan onDevicePress={() => undefined} />
+      </FlexView>
     );
   }
 }
 
-export default AddDevice;
+export default queries(commands(AddDevice));

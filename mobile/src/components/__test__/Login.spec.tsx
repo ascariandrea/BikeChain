@@ -1,4 +1,5 @@
 import * as React from 'react';
+// tslint:disable-next-line:no-implicit-dependencies
 import * as renderer from 'react-test-renderer';
 import { navigation } from '../../../__mocks__/mocks';
 import Login from '../Login';

@@ -1,13 +1,13 @@
-import { Button, List, Text, Title } from 'native-base';
+import { Button, Text } from 'native-base';
 import * as React from 'react';
 import { declareCommands, declareQueries } from 'react-avenger';
 import { ActivityIndicator } from 'react-native';
-import { Device } from 'react-native-ble-plx';
-import { NavigationScreenProps } from 'react-navigation';
-import { bleCommands, permissionCommands } from '../../commands';
-import { bleQueries, permissionQueries } from '../../queries';
-import { ROUTES } from '../../routes/routes';
-import { FlexView } from '../common/FlexView';
+import { bleCommands, permissionCommands } from '../commands';
+import { Device } from '../models';
+import { bleQueries, permissionQueries } from '../queries';
+import { foldQuery } from '../utils/utils';
+import BLEDeviceList from './BLEDeviceList';
+import { FlexView } from './common/FlexView';
 
 const queries = declareQueries({
   scannedDevices: bleQueries.scannedDevices,
@@ -16,8 +16,7 @@ const queries = declareQueries({
 const commands = declareCommands({ ...bleCommands, ...permissionCommands });
 
 type Props = typeof queries.Props &
-  typeof commands.Props &
-  NavigationScreenProps;
+  typeof commands.Props & { onDevicePress(d: Device): void };
 
 interface State {
   isScanning: boolean;
@@ -34,7 +33,27 @@ class Scan extends React.Component<Props, State> {
 
     return (
       <FlexView style={{ width: '100%' }}>
-        <FlexView style={{ alignSelf: 'flex-end' }}>
+        <FlexView
+          style={{
+            flexGrow: 1,
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          {foldQuery(
+            scannedDevices,
+            () => (
+              <Text>No values</Text>
+            ),
+            devices => (
+              <BLEDeviceList devices={devices} onPress={this.onPress} />
+            ),
+            () => (
+              <ActivityIndicator />
+            )
+          )}
+        </FlexView>
+        <FlexView style={{ alignSelf: 'center' }}>
           {!isScanning && accessCoarseLocation.ready ? (
             <Button
               primary
@@ -48,52 +67,17 @@ class Scan extends React.Component<Props, State> {
             </Button>
           )}
         </FlexView>
-        <FlexView
-          style={{
-            flexGrow: 1,
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          {scannedDevices.loading ? (
-            <ActivityIndicator />
-          ) : !scannedDevices.ready ? (
-            <Text>No values</Text>
-          ) : scannedDevices.value ? (
-            <List
-              style={{ flex: 1, width: '100%' }}
-              renderRow={this.renderDeviceItem}
-              dataArray={scannedDevices.value}
-            />
-          ) : (
-            <Text>No values!</Text>
-          )}
-        </FlexView>
       </FlexView>
     );
   }
 
-  private onPress = (deviceId: string) => {
-    this.props.connectToDevice({ id: deviceId }).then(result => {
+  private onPress = (d: Device) => {
+    this.props.connectToDevice({ id: d.id }).then(result => {
       result.map(() => {
-        this.props.navigation.navigate(ROUTES.DEVICE_DETAILS);
+        this.props.onDevicePress(d);
       });
     });
   };
-
-  private renderDeviceItem = (item: Device) => (
-    <FlexView direction="column" style={{ width: '100%' }}>
-      <FlexView>
-        <Text>{item.name}</Text>
-        <Text>{item.id}</Text>
-      </FlexView>
-      <FlexView>
-        <Button onPress={() => this.onPress(item.id)}>
-          <Title>DETAILS</Title>
-        </Button>
-      </FlexView>
-    </FlexView>
-  );
 
   private stopScanning = () => {
     this.setState(

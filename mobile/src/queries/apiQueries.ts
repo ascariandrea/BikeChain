@@ -1,6 +1,4 @@
 import { available, Query } from 'avenger';
-import { AxiosError } from 'axios';
-import { Either, left, right } from 'fp-ts/lib/Either';
 import { none, Option, some } from 'fp-ts/lib/Option';
 import { ask, Reader } from 'fp-ts/lib/Reader';
 import { task } from 'fp-ts/lib/Task';
@@ -35,9 +33,9 @@ const makeAPIQueries = ({ client }: APIQueriesConfig) => ({
           client
             .run({ consumeError: true, auth })
             .get<Device[]>('/devices/getMany')
-            .foldTask<Either<AxiosError, Device[]>>(
-              l => task.of(left(l)),
-              r => task.of(right(r))
+            .foldTask<Option<Device[]>>(
+              _ => task.of(none),
+              r => task.of(some(r))
             )
         )
         .run()

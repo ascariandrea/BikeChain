@@ -37,5 +37,15 @@ export const foldQuery = <T, U>(
     ? fromNullable(query.value).foldL(whenReadyAndNone, whenReadyAndSome)
     : whenNotReady();
 
+export const foldQueryOpt = <T, U>(
+  query: Query<Option<T>>,
+  onReadyAndNone: () => U,
+  onReadyAndSome: (v: T) => U,
+  onNotReady: () => U
+): U =>
+  query.ready
+    ? query.value.foldL(onReadyAndNone, onReadyAndSome)
+    : onNotReady();
+
 export const queryAsOption = <T>(query: Query<T>): Option<T> =>
   foldQuery(query, () => none, some, () => none);
