@@ -2,13 +2,14 @@ import * as React from 'react';
 import { Text } from 'react-native';
 import { NavigationScreenProps } from 'react-navigation';
 import { ROUTES } from '../routes/routes';
-import { getAuth } from '../storage';
+import { storage } from '../services';
 import { FlexView } from './common';
 
 type Props = NavigationScreenProps;
 class Splash extends React.Component<Props> {
   public componentDidMount() {
-    getAuth()
+    storage
+      .getAuth()
       .map(authOpt => {
         if (authOpt.isSome()) {
           this.props.navigation.navigate(ROUTES.SCAN);

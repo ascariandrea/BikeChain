@@ -12,7 +12,7 @@ export class UserProfileRoute extends React.Component<
   public static navigationOptions: NavigationScreenConfig<
     NavigationStackScreenOptions
   > = () => ({
-    title: 'Login'
+    title: 'Profile'
   });
 
   public render() {

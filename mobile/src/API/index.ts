@@ -1,8 +1,8 @@
 import { CommandReturn, runCommand } from 'avenger';
 import { AxiosError } from 'axios';
 import { config } from '../config';
+import { storage } from '../services';
 import { state } from '../state';
-import { removeItem, STORAGE_KEYS } from '../storage';
 import { ClientReader } from './Client';
 
 export const client = ClientReader.run({
@@ -16,7 +16,7 @@ export const client = ClientReader.run({
     if (e.response) {
       switch (e.response.status) {
         case 401: {
-          removeItem(STORAGE_KEYS.TOKEN).run();
+          storage.removeItem(storage.STORAGE_KEYS.TOKEN).run();
         }
       }
     }

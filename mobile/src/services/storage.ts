@@ -31,11 +31,15 @@ export const setItem = (key: string, item: any): Task<void> => {
   return tryCatch(
     () => AsyncStorage.setItem(key, JSON.stringify(item)),
     debug(`AsyncStorage failed to set item ${key}`)
-  ).map(result => result.getOrElse(undefined));
+  )
+    .map(debug(`Setting ${key}`))
+    .map(r => r.getOrElse(undefined));
 };
 
 export const removeItem = (key: string): Task<void> =>
   tryCatch(
     () => AsyncStorage.removeItem(key),
     debug(`AsyncStorage failed to remove item ${key}`)
-  ).map(r => r.getOrElse(undefined));
+  )
+    .map(debug(`Removed ${key}`))
+    .map(r => r.getOrElse(undefined));

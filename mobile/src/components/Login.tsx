@@ -1,15 +1,16 @@
-import { none, Option } from 'fp-ts/lib/Option';
+import { fromNullable, Option } from 'fp-ts/lib/Option';
 import { Button, Form, Input, Item, Text } from 'native-base';
 import * as React from 'react';
 import { declareCommands } from 'react-avenger';
 import { NavigationScreenProps } from 'react-navigation';
 import { apiCommands } from '../commands';
+import { config } from '../config';
 import { ROUTES } from '../routes/routes';
 import { fromEmptyString } from '../utils/utils';
 import { FlexView } from './common';
 
 const commands = declareCommands({
-  login: apiCommands.login
+  login: apiCommands.doLogin
 });
 
 type Props = typeof commands.Props & NavigationScreenProps;
@@ -20,8 +21,8 @@ interface State {
 }
 class Login extends React.Component<Props, State> {
   public state: State = {
-    email: none,
-    password: none
+    email: fromNullable(config.email),
+    password: fromNullable(config.password)
   };
 
   public onLoginPress = (email: string, password: string) => {

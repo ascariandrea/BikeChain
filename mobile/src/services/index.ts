@@ -26,3 +26,6 @@ export const GATTParser = GATTParserReader.run({
 });
 
 export * from './permissions';
+
+import * as storage from './storage';
+export { storage };

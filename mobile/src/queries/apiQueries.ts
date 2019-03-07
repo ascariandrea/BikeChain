@@ -2,9 +2,10 @@ import { available, Query } from 'avenger';
 import { none, Option, some } from 'fp-ts/lib/Option';
 import { ask, Reader } from 'fp-ts/lib/Reader';
 import { task } from 'fp-ts/lib/Task';
+import { storageQueries } from '.';
 import { ClientRequestReader } from '../API/Client';
 import { Device, User } from '../models';
-import { getAuth } from '../storage';
+import { debug } from '../utils/utils';
 
 interface APIQueriesConfig {
   client: ClientRequestReader;
@@ -13,32 +14,40 @@ interface APIQueriesConfig {
 const makeAPIQueries = ({ client }: APIQueriesConfig) => ({
   user: Query({
     params: {},
+    dependencies: { token: storageQueries.token },
     cacheStrategy: available,
-    fetch: () =>
-      getAuth()
-        .chain(auth =>
-          client
-            .run({ auth, consumeError: true })
-            .get<User>('/users/me')
-            .foldTask<Option<User>>(_ => task.of(none), r => task.of(some(r)))
+    fetch: ({ token }) =>
+      token
+        .foldL(
+          () => task.of(none),
+          t =>
+            client
+              .run({ token: some(t), consumeError: true })
+              .get<User>('/users/me')
+              .map(debug('my user'))
+              .foldTask<Option<User>>(_ => task.of(none), r => task.of(some(r)))
         )
         .run()
   }),
   devices: Query({
     params: {},
+    dependencies: { token: storageQueries.token },
     cacheStrategy: available,
-    fetch: () =>
-      getAuth()
-        .chain(auth =>
-          client
-            .run({ consumeError: true, auth })
-            .get<Device[]>('/devices/getMany')
-            .foldTask<Option<Device[]>>(
-              _ => task.of(none),
-              r => task.of(some(r))
-            )
+    fetch: ({ token }) => {
+      return token
+        .foldL(
+          () => task.of(none),
+          t =>
+            client
+              .run({ consumeError: true, token: some(t) })
+              .get<Device[]>('/devices/getMany')
+              .foldTask<Option<Device[]>>(
+                _ => task.of(none),
+                r => task.of(some(r))
+              )
         )
-        .run()
+        .run();
+    }
   })
 });
 

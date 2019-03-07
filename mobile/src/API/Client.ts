@@ -19,7 +19,7 @@ interface ClientConfig {
 }
 
 interface ClientRequestConfig {
-  auth: Option<string>;
+  token: Option<string>;
   consumeError: boolean;
 }
 
@@ -60,7 +60,7 @@ export type ClientRequestReader = Reader<ClientRequestConfig, Client>;
 export const ClientReader: Reader<ClientConfig, ClientRequestReader> = ask<
   ClientConfig
 >().map(({ baseURL, responseMapper, onError }) => {
-  return ask<ClientRequestConfig>().map(({ auth, consumeError }) => {
+  return ask<ClientRequestConfig>().map(({ token, consumeError }) => {
     return {
       get: <T>(
         url: string,
@@ -71,7 +71,7 @@ export const ClientReader: Reader<ClientConfig, ClientRequestReader> = ask<
             handlePromise(responseMapper)(
               Axios.get(
                 makeURL(baseURL, url),
-                patchAxiosRequestConfig(auth, axiosReqConfig)
+                patchAxiosRequestConfig(token, axiosReqConfig)
               )
             ),
           handleError(onError, consumeError)
@@ -87,7 +87,7 @@ export const ClientReader: Reader<ClientConfig, ClientRequestReader> = ask<
               Axios.post(
                 makeURL(baseURL, url),
                 data,
-                patchAxiosRequestConfig(auth, axiosReqConfig)
+                patchAxiosRequestConfig(token, axiosReqConfig)
               )
             ),
           handleError(onError, consumeError)

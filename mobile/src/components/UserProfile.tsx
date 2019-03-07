@@ -20,7 +20,6 @@ type Props = typeof queries.Props & typeof commands.Props;
 class UserProfile extends React.Component<Props> {
   public render() {
     const { user, doLogout } = this.props;
-
     return (
       <FlexView>
         {foldQuery(
