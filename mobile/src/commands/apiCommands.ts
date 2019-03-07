@@ -6,7 +6,7 @@ import * as t from 'io-ts';
 import { ClientRequestReader } from '../API/Client';
 import { Auth, Device } from '../models';
 import { apiQueries } from '../queries';
-import { getAuth, setItem, STORAGE_KEYS } from '../storage';
+import { getAuth, removeItem, setItem, STORAGE_KEYS } from '../storage';
 
 interface APICommandsConfig {
   client: ClientRequestReader;
@@ -49,6 +49,19 @@ const makeAPICommands = ({ client }: APICommandsConfig) => ({
     params: {},
     invalidates: { devices: apiQueries.devices },
     run: Promise.resolve.bind(Promise)
+  }),
+  doLogout: Command({
+    params: {},
+    invalidates: { user: apiQueries.user },
+    run: () =>
+      getAuth()
+        .map(auth =>
+          client
+            .run({ consumeError: true, auth })
+            .post<Auth>('/users/logout')
+            .chain(() => right(removeItem(STORAGE_KEYS.TOKEN)))
+        )
+        .run()
   })
 });
 

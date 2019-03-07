@@ -27,7 +27,7 @@ export interface Client {
   get<T>(url: string, config?: AxiosRequestConfig): TaskEither<AxiosError, T>;
   post<T>(
     url: string,
-    data: any,
+    data?: any,
     config?: AxiosRequestConfig
   ): TaskEither<AxiosError, T>;
 }

@@ -1,6 +1,8 @@
-import { Text } from 'native-base';
+import { Button, Text } from 'native-base';
 import * as React from 'react';
-import { declareQueries } from 'react-avenger';
+import { declareCommands, declareQueries } from 'react-avenger';
+import { ActivityIndicator } from 'react-native';
+import { apiCommands } from '../commands';
 import { apiQueries } from '../queries';
 import { foldQuery } from '../utils/utils';
 import { FlexView } from './common';
@@ -8,11 +10,16 @@ import { FlexView } from './common';
 const queries = declareQueries({
   user: apiQueries.user
 });
-type Props = typeof queries.Props;
+
+const commands = declareCommands({
+  doLogout: apiCommands.doLogout
+});
+
+type Props = typeof queries.Props & typeof commands.Props;
 
 class UserProfile extends React.Component<Props> {
   public render() {
-    const { user } = this.props;
+    const { user, doLogout } = this.props;
 
     return (
       <FlexView>
@@ -23,10 +30,15 @@ class UserProfile extends React.Component<Props> {
           ),
           result =>
             result.fold(<Text>No user available</Text>, u => (
-              <Text>{u.email}</Text>
+              <FlexView>
+                <Text>{u.email}</Text>
+                <Button onPress={() => doLogout({})}>
+                  <Text>Logout</Text>
+                </Button>
+              </FlexView>
             )),
           () => (
-            <Text>Loading</Text>
+            <ActivityIndicator />
           )
         )}
       </FlexView>
@@ -34,4 +46,4 @@ class UserProfile extends React.Component<Props> {
   }
 }
 
-export default queries(UserProfile);
+export default queries(commands(UserProfile));

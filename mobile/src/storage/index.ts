@@ -22,7 +22,7 @@ export const getItem = <T>(key: string): Task<Option<T>> => {
         })
         .getOrElse(none);
     })
-    .map(debug('token'));
+    .map(debug(`Getting ${key}`));
 };
 
 export const getAuth = () => getItem<string>(STORAGE_KEYS.TOKEN);
@@ -33,3 +33,9 @@ export const setItem = (key: string, item: any): Task<void> => {
     debug(`AsyncStorage failed to set item ${key}`)
   ).map(result => result.getOrElse(undefined));
 };
+
+export const removeItem = (key: string): Task<void> =>
+  tryCatch(
+    () => AsyncStorage.removeItem(key),
+    debug(`AsyncStorage failed to remove item ${key}`)
+  ).map(r => r.getOrElse(undefined));
