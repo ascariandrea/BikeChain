@@ -1,6 +1,8 @@
 package com.bikechain.models
 
 import org.joda.time.DateTime
+import io.circe.generic.JsonCodec
+import io.circe.syntax._
 
 case class User(
     id: Int,
@@ -11,7 +13,7 @@ case class User(
     createdAt: DateTime
 )
 
-case class APIUser(
+@JsonCodec case class APIUser(
     id: Int,
     email: String,
     createdAt: String
@@ -26,13 +28,13 @@ object APIUser {
     )
 }
 
-case class SignUpBody(
+@JsonCodec case class SignUpBody(
     email: String,
     password: String,
     passwordConfirmation: String
 )
 
-case class LoginBody(
+@JsonCodec case class LoginBody(
     email: String,
     password: String
 )

@@ -12,6 +12,7 @@ import com.bikechain.data.{Db, DBConfig}
 import com.bikechain.core.PostgresProfile.api._
 import com.bikechain.utils.{HashUtil}
 import scala.util.{Failure, Success}
+import wiro.Auth
 
 trait RouterTest
     extends FlatSpec
@@ -46,6 +47,9 @@ trait RouterTest
 
     dbConfig.db.run(statement.asTry)
   }
+
+  def addAuthorizationHeader(token: String) =
+    addHeader("Authorization", s"Token token=$token")
 
   val usersRoutes = deriveRouter[UsersAPI](new UserController).buildRoute
   val deviceRoutes = deriveRouter[DevicesAPI](new DeviceController).buildRoute

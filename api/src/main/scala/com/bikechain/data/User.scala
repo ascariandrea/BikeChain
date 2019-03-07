@@ -47,7 +47,7 @@ trait UserDataModel {
 
     def updateToken(
         email: String,
-        token: String
+        token: Option[String]
     ): Future[Either[Error, Auth]] = {
       db.dbConfig.db
         .run(
@@ -56,20 +56,26 @@ trait UserDataModel {
               u => u.email === email
             )
             .map(u => u.token)
-            .update(Some(token))
+            .update(token)
         )
         .flatMap {
-          case 0 => Future(Left(Error("Not updated")))
-          case _ =>
-            db.dbConfig.db
-              .run(users.filter(_.token === token).result.asTry)
-              .map(
-                DBSerializers
-                  .toResult(
-                    u => u.headOption.flatMap(u => u.token.map(t => Auth(t)))
-                  )
-              )
-
+          case 1 => {
+            if (token.isDefined) {
+              db.dbConfig.db
+                .run(users.filter(_.token === token.get).result.asTry)
+                .map(
+                  DBSerializers
+                    .toResult(
+                      u =>
+                        u.headOption
+                          .flatMap(u => u.token.map(t => Auth(t)))
+                    )
+                )
+            } else {
+              Future(Right(Auth(null)))
+            }
+          }
+          case _ => Future(Left(Error("Not updated")))
         }
     }
 

@@ -2,7 +2,14 @@ package com.bikechain.routers
 
 import wiro.Auth
 import wiro.annotation.{command, path, query}
-import com.bikechain.models.{APIUser, Error, User, SignUpBody, LoginBody}
+import com.bikechain.models.{
+  APIUser,
+  Error,
+  User,
+  SignUpBody,
+  LoginBody,
+  EmptyResponse
+}
 
 import scala.concurrent.Future
 
@@ -21,5 +28,8 @@ trait UsersAPI {
       password: String,
       passwordConfirmation: String
   ): Future[Either[Error, APIUser]]
+
+  @command
+  def logout(token: Auth): Future[Either[Error, EmptyResponse]]
 
 }

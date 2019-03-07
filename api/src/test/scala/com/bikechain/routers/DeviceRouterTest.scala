@@ -7,9 +7,9 @@ import com.bikechain.models.{APIDevice, CreateDeviceBody, LoginBody}
 import com.bikechain.utils.WiroSupport
 import de.heikoseeberger.akkahttpcirce.ErrorAccumulatingCirceSupport._
 import org.scalatest.{FlatSpec, Matchers}
+import wiro.Auth
 import wiro.server.akkaHttp._
 import wiro.server.akkaHttp.FailSupport._
-import wiro.Auth
 import akka.http.scaladsl.model.{HttpEntity}
 import akka.http.scaladsl.model.headers.{RawHeader}
 import scala.util.Try

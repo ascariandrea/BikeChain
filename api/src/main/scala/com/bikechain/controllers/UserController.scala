@@ -4,7 +4,14 @@ import wiro.Auth
 import wiro.annotation.{command, query}
 
 import scala.concurrent.Future
-import com.bikechain.models.{SignUpBody, Error, User, APIUser, LoginBody}
+import com.bikechain.models.{
+  SignUpBody,
+  Error,
+  User,
+  APIUser,
+  LoginBody,
+  EmptyResponse
+}
 import com.bikechain.utils.{ErrorSerializers, HashUtil, EmailUtil}
 import com.bikechain.data.{Db, DBConfig, UserDataModel}
 import com.bikechain.routers.UsersAPI
@@ -39,7 +46,7 @@ class UserController()
           if (user.password
             .equals(HashUtil.saltAndHash(password, user.salt))) => {
         val token = HashUtil.randomAlphanumericString(26)
-        userDataModel.updateToken(email, token)
+        userDataModel.updateToken(email, Some(token))
       }
       case _ =>
         Future(Left(ErrorSerializers.toNotFoundError("user", "email", email)))
@@ -50,7 +57,29 @@ class UserController()
     userDataModel
       .getMe(token.token)
       .map(
-        result => result.map(APIUser.fromDataUser)
+        result => {
+          result.fold(
+            e => Left(ErrorSerializers.toUnauthorizedError()),
+            u => Right(APIUser.fromDataUser(u))
+          )
+        }
+      )
+  }
+
+  override def logout(token: Auth): Future[Either[Error, EmptyResponse]] = {
+    userDataModel
+      .getMe(token.token)
+      .flatMap(
+        result => {
+          result.fold(
+            e => Future(Left(Error(message = e.message, code = 401))),
+            u => {
+              userDataModel
+                .updateToken(u.email, None)
+                .map((r) => r.map(_ => EmptyResponse()))
+            }
+          )
+        }
       )
   }
 
@@ -66,4 +95,5 @@ class UserController()
         Left(ErrorSerializers.toInvalidParamError("email", email))
       )
     }
+
 }

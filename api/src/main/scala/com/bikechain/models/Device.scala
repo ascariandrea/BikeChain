@@ -1,6 +1,8 @@
 package com.bikechain.models
 
 import org.joda.time.DateTime
+import io.circe.generic.JsonCodec
+import io.circe.syntax._
 
 case class Device(
     id: Int,
@@ -10,7 +12,7 @@ case class Device(
     createdAt: DateTime
 )
 
-case class APIDevice(
+@JsonCodec final case class APIDevice(
     id: Int,
     uuid: String,
     name: String,
@@ -29,4 +31,4 @@ object APIDevice {
     )
 }
 
-case class CreateDeviceBody(uuid: String, name: String)
+@JsonCodec final case class CreateDeviceBody(uuid: String, name: String)

@@ -34,7 +34,8 @@ import org.joda.time.format.DateTimeFormat
 
 trait WiroSupport {
 
-  implicit val errorDecoder: Decoder[Error] = deriveDecoder
+  implicit val authDecoder: Decoder[Auth] = deriveDecoder
+  implicit val authEncoder: Encoder[Auth] = deriveEncoder
 
   val dateFormatter = DateTimeFormat.forPattern("yyyyMMdd")
   implicit val dateTimeDecoder: Decoder[DateTime] = Decoder.decodeString.emap {
@@ -47,20 +48,6 @@ trait WiroSupport {
   }
   implicit val dateTimeEncoder: Encoder[DateTime] =
     Encoder.encodeString.contramap[DateTime](_.toString)
-
-  implicit val authDecoder: Decoder[Auth] = deriveDecoder
-  implicit val authEncoder: Encoder[Auth] = deriveEncoder
-
-  implicit val signUpBodyEncoder: Encoder[SignUpBody] = deriveEncoder
-  implicit val loginBodyEncoder: Encoder[LoginBody] = deriveEncoder
-
-  implicit val userDecoder: Decoder[APIUser] = deriveDecoder
-  implicit val userEncoder: Encoder[APIUser] = deriveEncoder
-
-  implicit val createDeviceBodyEncoder: Encoder[CreateDeviceBody] =
-    deriveEncoder
-  implicit val deviceDecoder: Decoder[APIDevice] = deriveDecoder
-  implicit val deviceEncoder: Encoder[APIDevice] = deriveEncoder
 
   implicit def errorToResponse = new ToHttpResponse[Error] {
 
