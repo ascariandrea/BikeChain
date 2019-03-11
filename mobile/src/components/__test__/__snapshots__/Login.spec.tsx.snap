@@ -55,7 +55,7 @@ exports[`should renders correctly 1`] = `
           }
         }
         underlineColorAndroid="rgba(0,0,0,0)"
-        value=""
+        value="me@bikechain.com"
       />
     </View>
     <View
@@ -104,7 +104,7 @@ exports[`should renders correctly 1`] = `
           }
         }
         underlineColorAndroid="rgba(0,0,0,0)"
-        value=""
+        value="password"
       />
     </View>
     <View
