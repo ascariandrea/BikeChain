@@ -9,7 +9,7 @@ import com.github.tototoshi.slick.PostgresJodaSupport._
 import org.joda.time.DateTime
 
 trait DeviceDataModel {
-  db: Db =>
+  this: Db =>
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -29,13 +29,11 @@ trait DeviceDataModel {
   }
 
   val devices = TableQuery[Devices]
-  val devicesDB = db.dbConfig.db
 
   object DeviceDataModel {
 
     def getDeviceById(id: Int): Future[Either[Error, Device]] =
-      devicesDB
-        .run(devices.filter(_.id === id).result.asTry)
+      db.run(devices.filter(_.id === id).result.asTry)
         .map(DBSerializers.toResult(r => r.headOption))
 
     def createDevice(
@@ -50,14 +48,12 @@ trait DeviceDataModel {
           ) => item.copy(id = id)
       ) += Device(0, uuid, name, userId, DateTime.now())
 
-      db.dbConfig.db
-        .run(action.asTry)
+      db.run(action.asTry)
         .map(DBSerializers.toResult(d => Some(d)))
     }
 
     def getMany(): Future[Either[Error, List[Device]]] =
-      db.dbConfig.db
-        .run(devices.result.asTry)
+      db.run(devices.result.asTry)
         .map(DBSerializers.toResult(d => Some(d.toList)))
   }
 

@@ -9,11 +9,11 @@ import org.slf4j.LoggerFactory;
 
 object CreateTables
     extends App
-    with DeviceDataModel
-    with UserDataModel
     with BikeChainConfig
+    with DbConfiguration
     with Db
-    with DBConfig {
+    with DeviceDataModel
+    with UserDataModel {
 
   final val logger: Logger = LoggerFactory.getLogger(CreateTables.getClass)
 
@@ -26,7 +26,7 @@ object CreateTables
   )
 
   def createIfNotExist(): List[Unit] = {
-    val existing = dbConfig.db.run(MTable.getTables)
+    val existing = this.db.run(MTable.getTables)
     val f = existing.flatMap(v => {
       val names = v.map(mt => mt.name.name)
       val createIfNotExist = tables
@@ -36,7 +36,7 @@ object CreateTables
           t.schema.create
         })
 
-      dbConfig.db.run(DBIO.sequence(createIfNotExist))
+      this.db.run(DBIO.sequence(createIfNotExist))
     })
     Await.result(f, Duration.Inf)
   }

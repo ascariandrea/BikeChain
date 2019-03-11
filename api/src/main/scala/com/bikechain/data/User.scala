@@ -10,7 +10,7 @@ import org.joda.time.DateTime
 import wiro.Auth
 
 trait UserDataModel {
-  db: Db =>
+  this: Db =>
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -36,21 +36,18 @@ trait UserDataModel {
 
   object UserDataModel {
     def getMe(token: String): Future[Either[Error, User]] =
-      db.dbConfig.db
-        .run(users.filter(_.token === token).result.asTry)
+      db.run(users.filter(_.token === token).result.asTry)
         .map(DBSerializers.toResult(r => r.headOption))
 
     def findByEmail(email: String): Future[Either[Error, User]] =
-      db.dbConfig.db
-        .run(users.filter(_.email === email).result.asTry)
+      db.run(users.filter(_.email === email).result.asTry)
         .map(DBSerializers.toResult(r => r.headOption))
 
     def updateToken(
         email: String,
         token: Option[String]
     ): Future[Either[Error, Auth]] = {
-      db.dbConfig.db
-        .run(
+      db.run(
           users
             .filter(
               u => u.email === email
@@ -61,8 +58,7 @@ trait UserDataModel {
         .flatMap {
           case 1 => {
             if (token.isDefined) {
-              db.dbConfig.db
-                .run(users.filter(_.token === token.get).result.asTry)
+              db.run(users.filter(_.token === token.get).result.asTry)
                 .map(
                   DBSerializers
                     .toResult(
@@ -95,8 +91,7 @@ trait UserDataModel {
           DateTime.now()
         )
 
-      db.dbConfig.db
-        .run(action.asTry)
+      db.run(action.asTry)
         .map(DBSerializers.toResult(u => Some(u)))
     }
   }

@@ -8,7 +8,7 @@ import org.scalatest.{BeforeAndAfterAll, FlatSpec}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.bikechain.models.{SignUpBody}
 import akka.http.scaladsl.model.{HttpEntity}
-import com.bikechain.data.{Db, DBConfig}
+import com.bikechain.data.{Db, DbConfiguration}
 import com.bikechain.core.PostgresProfile.api._
 import com.bikechain.utils.{HashUtil}
 import scala.util.{Failure, Success}
@@ -21,7 +21,7 @@ trait RouterTest
     with BeforeAndAfterAll
     with ScalatestRouteTest
     with Db
-    with DBConfig {
+    with DbConfiguration {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -51,6 +51,8 @@ trait RouterTest
   def addAuthorizationHeader(token: String) =
     addHeader("Authorization", s"Token token=$token")
 
-  val usersRoutes = deriveRouter[UsersAPI](new UserController).buildRoute
-  val deviceRoutes = deriveRouter[DevicesAPI](new DeviceController).buildRoute
+  val usersRoutes =
+    deriveRouter[UsersAPI](new UserController(dbConfig)).buildRoute
+  val deviceRoutes =
+    deriveRouter[DevicesAPI](new DeviceController(dbConfig)).buildRoute
 }

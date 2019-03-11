@@ -2,17 +2,18 @@ package com.bikechain.controllers
 
 import wiro.Auth
 import com.bikechain.config.BikeChainConfig
-import com.bikechain.data.{DBConfig, Db, DeviceDataModel, UserDataModel}
+import com.bikechain.data.{Db, DeviceDataModel, UserDataModel}
 import com.bikechain.models.{APIDevice, Error, User}
 import com.bikechain.routers.DevicesAPI
 import com.bikechain.utils.ErrorSerializers
-
+import slick.basic.DatabaseConfig
 import scala.concurrent.Future
+import com.bikechain.core.PostgresProfile
+import slick.basic.DatabaseConfig
 
-class DeviceController()
+class DeviceController(val dbConfig: DatabaseConfig[PostgresProfile])
     extends DevicesAPI
     with BikeChainConfig
-    with DBConfig
     with Db
     with DeviceDataModel
     with UserDataModel {

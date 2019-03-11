@@ -13,13 +13,14 @@ import com.bikechain.models.{
   EmptyResponse
 }
 import com.bikechain.utils.{ErrorSerializers, HashUtil, EmailUtil}
-import com.bikechain.data.{Db, DBConfig, UserDataModel}
+import com.bikechain.data.{Db, DbConfiguration, UserDataModel}
 import com.bikechain.routers.UsersAPI
+import slick.basic.DatabaseConfig
+import com.bikechain.core.PostgresProfile
 
-class UserController()
+class UserController(val dbConfig: DatabaseConfig[PostgresProfile])
     extends UsersAPI
     with Db
-    with DBConfig
     with UserDataModel {
 
   import scala.concurrent.ExecutionContext.Implicits.global
