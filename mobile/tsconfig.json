@@ -17,5 +17,6 @@
   "include": [
     "./src",
     "./typings"
-  ]
+  ],
+  "exclude": ["**/__test__/**"]
 }

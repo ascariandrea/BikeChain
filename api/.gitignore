@@ -1,0 +1,7 @@
+.ensime*
+.idea
+.bloop
+.metals
+
+target
+*.log
