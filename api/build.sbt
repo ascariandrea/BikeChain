@@ -1,6 +1,8 @@
 resolvers += "buildo at bintray" at "https://dl.bintray.com/buildo/maven"
 resolvers += Resolver.sonatypeRepo("releases")
 
+enablePlugins(JavaServerAppPackaging)
+
 addCompilerPlugin(
   "org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full
 )

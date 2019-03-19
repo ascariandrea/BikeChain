@@ -1,0 +1,4 @@
+web: target/universal/stage/bin/bike-chain-app -Dconfig.file=src/main/resources/prod.conf
+
+release: sbt flyway:migrate
+
