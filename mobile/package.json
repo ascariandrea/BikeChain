@@ -20,7 +20,7 @@
     "native-base": "^2.8.1",
     "react": "16.6.3",
     "react-avenger": "^8.0.1",
-    "react-native": "0.58.6",
+    "react-native": "^0.59.1",
     "react-native-ble-plx": "^1.0.0",
     "react-native-fs": "^2.12",
     "react-native-gesture-handler": "^1.0.9",
