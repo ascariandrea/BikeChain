@@ -1,8 +1,6 @@
 resolvers += "buildo at bintray" at "https://dl.bintray.com/buildo/maven"
 resolvers += Resolver.sonatypeRepo("releases")
 
-enablePlugins(JavaServerAppPackaging)
-
 addCompilerPlugin(
   "org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full
 )
@@ -17,10 +15,14 @@ val log4jVersion = "2.11.1"
 val slickVersion = "3.2.3"
 val slickJodaMapperVersion = "2.3.0"
 val akkaHTTPVersion = "10.1.7"
-val wiroDep = "io.buildo" %% "wiro-http-server" % "0.7.1"
+val wiroVersion = "0.7.1"
+val enumeroVersion = "1.3.0"
 
 libraryDependencies ++= Seq(
-  wiroDep,
+  "io.buildo" %% "wiro-http-server" % wiroVersion,
+  "io.buildo" %% "enumero" % enumeroVersion,
+  "io.buildo" %% "enumero-circe-support" % enumeroVersion,
+  "io.spray" %% "spray-json" % "1.3.5",
   "com.typesafe.slick" %% "slick" % slickVersion,
   "com.typesafe.slick" %% "slick-hikaricp" % "3.2.0",
   "com.github.tminglei" %% "slick-pg" % "0.16.3",
@@ -43,7 +45,7 @@ libraryDependencies ++= Seq(
 ).map(_ % circeVersion)
 
 libraryDependencies ++= Seq(
-  wiroDep,
+  "io.buildo" %% "wiro-http-server" % wiroVersion,
   "org.scalatest" %% "scalatest" % "3.0.5",
   "com.typesafe.akka" %% "akka-http" % akkaHTTPVersion,
   "com.typesafe.akka" %% "akka-testkit" % "2.5.14",
@@ -67,8 +69,15 @@ cancelable in Global := true
 coverageMinimum := 80
 coverageFailOnMinimum := true
 
-lazy val dbSetup = (project in file("data"))
-
 mainClass in (Compile, run) := Some("com.bikechain.BikeChainApp")
 
-lazy val root = (project in file(".")).dependsOn(dbSetup)
+lazy val root = (project in file("."))
+  .settings(
+    flywayUrl := sys.env
+      .get("DATABASE_URL")
+      .getOrElse("jdbc:postgresql://127.0.0.1:5432/bikechain"),
+    flywayUser := sys.env.get("DATABASE_USER").getOrElse("root"),
+    flywayPassword := sys.env.get("DATABASE_PASSWORD").getOrElse("password")
+  )
+  .enablePlugins(FlywayPlugin)
+  .enablePlugins(JavaServerAppPackaging)
