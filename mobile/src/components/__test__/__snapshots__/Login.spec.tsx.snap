@@ -43,6 +43,7 @@ exports[`should renders correctly 1`] = `
         onChangeText={[Function]}
         placeholder="Username"
         placeholderTextColor="#575757"
+        rejectResponderTermination={true}
         style={
           Object {
             "color": "#000",
@@ -91,6 +92,7 @@ exports[`should renders correctly 1`] = `
         onChangeText={[Function]}
         placeholder="Password"
         placeholderTextColor="#575757"
+        rejectResponderTermination={true}
         secureTextEntry={true}
         style={
           Object {
