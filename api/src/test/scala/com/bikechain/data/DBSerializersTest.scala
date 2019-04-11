@@ -7,18 +7,19 @@ import org.postgresql.util.PSQLException
 
 class DBSerializersTest extends FlatSpec with Matchers {
   it should "Serialize a valid result" in {
-    val result = DBSerializers.toResult[Int, Int](i => Some(1))(Success(1))
+    val result =
+      DBSerializers.toResult[Int, Int]((i: Int) => Some(1))(Success(1))
     result.right.get shouldBe 1
   }
 
   it should "Serialize a not found result from successful try" in {
-    val result = DBSerializers.toResult[Int, Int](i => None)(Success(1))
+    val result = DBSerializers.toResult[Int, Int]((i: Int) => None)(Success(1))
     result.left.get shouldBe a[Error]
     result.left.get.code shouldBe 404
   }
 
   it should "Serialize an error from failed try" in {
-    val result = DBSerializers.toResult[Int, Int](i => None)(
+    val result = DBSerializers.toResult[Int, Int]((i: Int) => None)(
       Failure(new PSQLException("Failed", null))
     )
     result.left.get shouldBe a[Error]
@@ -26,7 +27,7 @@ class DBSerializersTest extends FlatSpec with Matchers {
   }
 
   it should "Serialize an error from Exception" in {
-    val result = DBSerializers.toResult[Int, Int](i => None)(
+    val result = DBSerializers.toResult[Int, Int]((i: Int) => None)(
       Failure(new Exception("Failed"))
     )
     result.left.get shouldBe a[Error]
