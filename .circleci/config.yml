@@ -56,12 +56,9 @@ workflows:
       - api-test:
           requires:
             - api-install
-      - api-migrate:
-          requires:
-            - api-test
       - heroku/deploy-via-git:
           requires:
-            - api-migrate
+            - api-test
           filters:
             branches:
               ignore: /.*/
@@ -132,7 +129,8 @@ jobs:
           keys:
             - v1-mobile-deps-{{ checksum "yarn.lock" }}
       - run: yarn build
-
+  
+  # API Jobs
   api-install:
     executor: api-exec
     steps:
@@ -153,7 +151,6 @@ jobs:
             - "~/.sbt"
             - "~/.m2"
 
-
   api-test:
     executor: api-exec
     steps:
@@ -168,8 +165,3 @@ jobs:
 
       - store_artifacts:
           path: target/scala-2.12/scoverage-report
-
-  api-migrate:
-    executor: api-exec
-    steps:
-      - run: sbt flywayMigrate

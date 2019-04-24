@@ -77,7 +77,8 @@ lazy val root = (project in file("."))
       .get("DATABASE_URL")
       .getOrElse("jdbc:postgresql://127.0.0.1:5432/bikechain"),
     flywayUser := sys.env.get("DATABASE_USER").getOrElse("root"),
-    flywayPassword := sys.env.get("DATABASE_PASSWORD").getOrElse("password")
+    flywayPassword := sys.env.get("DATABASE_PASSWORD").getOrElse("password"),
+    flywayBaselineOnMigrate := true
   )
   .enablePlugins(FlywayPlugin)
   .enablePlugins(JavaServerAppPackaging)
