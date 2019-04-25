@@ -1,11 +1,11 @@
 package com.bikechain.data
 
-import com.bikechain.models.{Device, Error}
+import com.bikechain.models.{Device, DeviceStatus, Error}
 import scala.concurrent.{Future, ExecutionContext}
 import scala.util.{Failure, Success, Try}
 import com.bikechain.data.utils.DBSerializers
-import slick.driver.PostgresDriver.api._
 import com.github.tototoshi.slick.PostgresJodaSupport._
+import com.bikechain.core.PostgresProfile.api._
 import org.joda.time.DateTime
 
 trait DeviceDataModel {
@@ -15,17 +15,21 @@ trait DeviceDataModel {
 
   class Devices(tag: Tag)
       extends Table[Device](tag, "devices")
-      with TableWithCreateTimestamp {
+      with CreatedAtColumn {
+
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
 
     def uuid = column[String]("uuid", O.Unique)
 
     def name = column[String]("name")
 
+    def status =
+      column[DeviceStatus]("status", O.Default(DeviceStatus.Ok))
+
     def userId = column[Int]("user_id")
 
     def * =
-      (id, uuid, name, userId, createdAt) <> (Device.tupled, Device.unapply)
+      (id, uuid, name, userId, status, createdAt) <> (Device.tupled, Device.unapply)
   }
 
   val devices = TableQuery[Devices]
@@ -46,7 +50,7 @@ trait DeviceDataModel {
               item,
               id
           ) => item.copy(id = id)
-      ) += Device(0, uuid, name, userId, DateTime.now())
+      ) += Device(0, uuid, name, userId, DeviceStatus.Ok, DateTime.now())
 
       db.run(action.asTry)
         .map(DBSerializers.toResult(d => Some(d)))

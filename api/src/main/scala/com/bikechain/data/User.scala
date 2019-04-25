@@ -4,7 +4,7 @@ import com.bikechain.models.{SignUpBody, Error, User}
 import com.bikechain.data.utils.DBSerializers
 import com.bikechain.utils.{ErrorSerializers, HashUtil}
 import scala.concurrent.Future
-import slick.driver.PostgresDriver.api._
+import com.bikechain.core.PostgresProfile.api._
 import com.github.tototoshi.slick.PostgresJodaSupport._
 import org.joda.time.DateTime
 import wiro.Auth
@@ -14,9 +14,7 @@ trait UserDataModel {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  class Users(tag: Tag)
-      extends Table[User](tag, "users")
-      with TableWithCreateTimestamp {
+  class Users(tag: Tag) extends Table[User](tag, "users") with CreatedAtColumn {
 
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
 
@@ -37,7 +35,13 @@ trait UserDataModel {
   object UserDataModel {
     def getMe(token: String): Future[Either[Error, User]] =
       db.run(users.filter(_.token === token).result.asTry)
-        .map(DBSerializers.toResult(r => r.headOption))
+        .map(
+          DBSerializers
+            .toResult(
+              r => r.headOption,
+              ErrorSerializers.toUnauthorizedError
+            )
+        )
 
     def findByEmail(email: String): Future[Either[Error, User]] =
       db.run(users.filter(_.email === email).result.asTry)

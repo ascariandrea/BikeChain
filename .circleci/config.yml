@@ -1,23 +1,112 @@
-# Scala CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/sample-config/ for more details
-#
-version: 2
-jobs:
-  mobile_test:
+version: 2.1
+orbs:
+  heroku: circleci/heroku@0.0.6
+
+executors:
+  mobile-exec:
     docker:
       - image: circleci/node:11
-
     working_directory: ~/repo/mobile
+
+  api-exec:
+    docker:
+      - image: circleci/openjdk:11.0.2
+      - image: circleci/postgres:10.7-alpine-postgis
+        environment:
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: bikechain
+    working_directory: ~/repo/api
+
+commands:
+  db_setup:
+    description: "Setup DB"
+    steps:
+      - restore_cache:
+          keys:
+            - v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - restore_cache:
+          keys:
+            - v1-api-deps-{{ checksum "build.sbt" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-api-deps-
+      - run: sbt flywayMigrate
+
+
+workflows:
+  version: 2.1
+  mobile-deploy:
+    jobs:
+      - checkout_code
+      - mobile-install:
+          requires:
+            - checkout_code
+      - mobile-test:
+          requires:
+            - mobile-install
+      - mobile-build:
+          requires:
+            - mobile-test
+  api-deploy:
+    jobs:
+      - checkout_code
+      - api-install:
+          requires:
+            - checkout_code
+      - api-test:
+          requires:
+            - api-install
+      - heroku/deploy-via-git:
+          requires:
+            - api-test
+          filters:
+            branches:
+              only: master
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*/
+
+
+jobs:
+  checkout_code:
+    machine: true
     steps:
       - checkout:
           path: ~/repo
+      - save_cache:
+          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+          paths:
+            - ~/repo/mobile
+            - ~/repo/api
+
+  mobile-install:
+    executor: mobile-exec
+    steps:
+      - restore_cache:
+          keys:
+            - v1-repo-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
           keys:
             - v1-mobile-deps-{{ checksum "yarn.lock" }}
             # fallback to using the latest cache if no exact match is found
             - v1-mobile-deps-
+
       - run: yarn install
+
+      - save_cache:
+          key: v1-mobile-deps-{{ checksum "yarn.lock" }}
+          paths:
+            - "node_modules"
+
+  mobile-test:
+    executor: mobile-exec
+    steps:
+      - restore_cache:
+          keys:
+            - v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - restore_cache:
+          keys:
+            - v1-mobile-deps-{{ checksum "yarn.lock" }}
+
       - run: mkdir -p reports/junit/
 
       - run:
@@ -25,48 +114,48 @@ jobs:
             JEST_JUNIT_OUTPUT: reports/junit/js-test-results.xml
           command: yarn test --ci --reporters="jest-junit"
 
-      - save_cache:
-          key: v1-mobile-deps-{{ checksum "yarn.lock" }}
-          paths:
-            - "node_modules"
       - store_test_results:
           path: reports/junit
       - store_artifacts:
           path: reports/junit
 
-  api_test:
-    working_directory: ~/repo/api
-    docker:
-      - image: codestar/circleci-scala-sbt-git:scala-2.12.6-sbt-1.1.6
-      # specify the version you desire here
-      - image: circleci/postgres:9.6.2-alpine
-        environment:
-          POSTGRES_USER: root
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: bikechain
-
-
+  mobile-build:
+    executor: mobile-exec
     steps:
-      - checkout:
-          path: ~/repo
-      # Download and cache dependencies
       - restore_cache:
           keys:
-            - v1-dependencies-{{ checksum "build.sbt" }}
+            - v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - restore_cache:
+          keys:
+            - v1-mobile-deps-{{ checksum "yarn.lock" }}
+      - run: yarn build
+  
+  # API Jobs
+  api-install:
+    executor: api-exec
+    steps:
+      - restore_cache:
+          keys:
+            - v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - restore_cache:
+          keys:
+            - v1-api-deps-{{ checksum "build.sbt" }}
             # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
-      - run: sbt "runMain com.bikechain.data.CreateTables"
-      # run tests coverage
-      - run: sbt coverage test:compile
-
-      - run: sbt coverage test
+            - v1-api-deps-
+      - run: sbt compile
 
       - save_cache:
-          key: v1-dependencies-{{ checksum "build.sbt" }}
+          key: v1-api-deps-{{ checksum "build.sbt" }}
           paths:
             - "~/.ivy2/cache"
             - "~/.sbt"
             - "~/.m2"
+
+  api-test:
+    executor: api-exec
+    steps:
+      - db_setup
+      - run: sbt coverage test
 
       # run tests!
       - run: sbt coverageReport
@@ -76,9 +165,3 @@ jobs:
 
       - store_artifacts:
           path: target/scala-2.12/scoverage-report
-workflows:
-  version: 2
-  api_and_mobile:
-    jobs:
-      - api_test
-      - mobile_test

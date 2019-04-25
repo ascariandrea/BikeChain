@@ -1,6 +1,11 @@
 package com.bikechain.core
 
 import com.github.tminglei.slickpg._
+import slick.jdbc.{JdbcType}
+import slick.jdbc.PostgresProfile.api._
+import com.bikechain.models.{DeviceStatus}
+import io.buildo.enumero.{CaseEnum, CaseEnumSerialization}
+import scala.reflect.ClassTag
 
 trait PostgresProfile
     extends ExPostgresProfile
@@ -11,13 +16,15 @@ trait PostgresProfile
     with PgJsonSupport
     with PgSearchSupport
     with PgNetSupport
-    with PgLTreeSupport {
+    with PgLTreeSupport
+    with PgEnumSupport {
 
   // jsonb support is in postgres 9.4.0 onward; for 9.3.x use "json"
   def pgjson = "jsonb"
+  override val api = MyAPI
 
-
-  override val api = new API
+  object MyAPI
+      extends API
       with ArrayImplicits
       with DateTimeImplicits
       with JsonImplicits
@@ -26,7 +33,35 @@ trait PostgresProfile
       with RangeImplicits
       with HStoreImplicits
       with SearchImplicits
-      with SearchAssistants {}
+      with SearchAssistants {
+
+    implicit val deviceStatusEnumSerialization =
+      implicitly[CaseEnumSerialization[DeviceStatus]]
+
+    implicit lazy val deviceStatusCaseEnumMapper =
+      createEnumJdbcType[DeviceStatus](
+        "status",
+        deviceStatusEnumSerialization.caseToString(_),
+        deviceStatusEnumSerialization
+          .caseFromString(_)
+          .get,
+        quoteName = false
+      )
+
+    implicit val deviceStatusListTypeMapper: JdbcType[List[DeviceStatus]] =
+      new AdvancedArrayJdbcType[DeviceStatus](
+        "status",
+        (s) => Seq(deviceStatusEnumSerialization.caseFromString(s).get),
+        s => {
+          utils.SimpleArrayUtils.mkString[DeviceStatus](
+            deviceStatusEnumSerialization.caseToString
+          )(s)
+        }
+      ).to(_.toList)
+
+    implicit val deviceStatusColumnExtensionMethodsBuilder =
+      createEnumColumnExtensionMethodsBuilder[DeviceStatus]
+  }
 }
 
 object PostgresProfile extends PostgresProfile
