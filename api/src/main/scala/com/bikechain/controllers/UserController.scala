@@ -29,14 +29,12 @@ class UserController(val dbConfig: DatabaseConfig[PostgresProfile])
       email: String,
       password: String,
       passwordConfirmation: String
-  ): Future[Either[Error, APIUser]] = {
+  ): Future[Either[Error, APIUser]] =
     checkEmailAndPassword(email, password)((salt, hash) => {
       userDataModel
         .create(email, hash, salt)
         .map(result => result.map(APIUser.fromDataUser))
     })
-
-  }
 
   override def login(
       email: String,

@@ -35,7 +35,7 @@ object BikeChainApp
   implicit val materializer = ActorMaterializer()
   implicit val ec = system.dispatcher
 
-  implicit val config = ConfigFactory.load("com/bikechain")
+  implicit val config = ConfigFactory.load("bikechain")
 
   val usersRouter =
     deriveRouter[UsersAPI](new UserController(dbConfig))
@@ -43,7 +43,7 @@ object BikeChainApp
     deriveRouter[DevicesAPI](new DeviceController(dbConfig))
 
   val rpcServer = new HttpRPCServer(
-    config = Config("0.0.0.0", 8080),
+    config = Config("0.0.0.0", config.getInt("port")),
     routers = List(usersRouter, devicesRouter)
   )
 

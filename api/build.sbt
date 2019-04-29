@@ -19,6 +19,7 @@ val wiroVersion = "0.7.1"
 val enumeroVersion = "1.3.0"
 
 libraryDependencies ++= Seq(
+  "org.postgresql" % "postgresql" % "42.2.5",
   "io.buildo" %% "wiro-http-server" % wiroVersion,
   "io.buildo" %% "enumero" % enumeroVersion,
   "io.buildo" %% "enumero-circe-support" % enumeroVersion,
@@ -71,15 +72,13 @@ coverageFailOnMinimum := true
 
 mainClass in (Compile, run) := Some("com.bikechain.BikeChainApp")
 
-lazy val dbURL = sys.env
-  .get("DATABASE_URL")
-  .getOrElse("postgresql://127.0.0.1:5432/bikechain")
-lazy val dbUser = sys.env.get("DATABASE_USER").getOrElse("root")
-lazy val dbPsw = sys.env.get("DATABASE_PASSWORD").getOrElse("password")
+lazy val dbURL = sys.env.get("JDBC_DATABASE_URL")
+lazy val dbUser = sys.env.get("JDBC_DATABASE_USER")
+lazy val dbPsw = sys.env.get("JDBC_DATABASE_PASSWORD")
 
 lazy val root = (project in file("."))
   .settings(
-    flywayUrl := s"jdbc:$dbURL",
+    flywayUrl := dbURL,
     flywayUser := dbUser,
     flywayPassword := dbPsw,
     flywayBaselineOnMigrate := true
