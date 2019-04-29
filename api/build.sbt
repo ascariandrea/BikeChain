@@ -71,13 +71,17 @@ coverageFailOnMinimum := true
 
 mainClass in (Compile, run) := Some("com.bikechain.BikeChainApp")
 
+lazy val dbURL = sys.env
+  .get("DATABASE_URL")
+  .getOrElse("postgresql://127.0.0.1:5432/bikechain")
+lazy val dbUser = sys.env.get("DATABASE_USER").getOrElse("root")
+lazy val dbPsw = sys.env.get("DATABASE_PASSWORD").getOrElse("password")
+
 lazy val root = (project in file("."))
   .settings(
-    flywayUrl := sys.env
-      .get("DATABASE_URL")
-      .getOrElse("jdbc:postgresql://127.0.0.1:5432/bikechain"),
-    flywayUser := sys.env.get("DATABASE_USER").getOrElse("root"),
-    flywayPassword := sys.env.get("DATABASE_PASSWORD").getOrElse("password"),
+    flywayUrl := s"jdbc:$dbURL",
+    flywayUser := dbUser,
+    flywayPassword := dbPsw,
     flywayBaselineOnMigrate := true
   )
   .enablePlugins(FlywayPlugin)
